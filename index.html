@@ -9,12 +9,13 @@
       --bg: #f3ede7;
       --card: #fffaf5;
       --primary: #8b5e3c;
-      --primary-hover: #7a4f30;
       --secondary: #efe6dc;
       --text: #3b2f2a;
       --muted: #8a7e74;
       --radius: 16px;
       --shadow: 0 12px 30px rgba(60,40,20,0.08);
+      --boba-color: #cbb69a;
+      --highlight-color: #ffd966;
     }
 
     @media (prefers-color-scheme: dark) {
@@ -22,18 +23,19 @@
         --bg: #1c1815;
         --card: #26211d;
         --primary: #c08a5a;
-        --primary-hover: #b0794a;
         --secondary: #332c26;
         --text: #f3ede7;
         --muted: #b7a99c;
         --shadow: 0 14px 34px rgba(0,0,0,0.45);
+        --boba-color: #d2bfa7;
+        --highlight-color: #f4d27c;
       }
     }
 
     * { box-sizing: border-box; }
 
     body {
-      font-family: "Satoshi", "General Sans", "Inter", "DM Sans", system-ui, sans-serif;
+      font-family: "Satoshi", "General Sans", "Inter", system-ui, sans-serif;
       background: linear-gradient(180deg, #faf6f1, var(--bg));
       padding: 3.5rem 1.25rem 2.5rem;
       max-width: 860px;
@@ -41,105 +43,41 @@
       color: var(--text);
     }
 
-    h1 {
-      text-align: center;
-      font-size: 2.1rem;
-      margin-bottom: 0.6rem;
-      font-weight: 600;
-    }
-
-    .subtitle {
-      text-align: center;
-      color: var(--muted);
-      margin-bottom: 2rem;
-    }
+    h1 { text-align: center; margin-bottom: 0.5rem; font-size: 2.1rem; font-weight: 600; }
+    .subtitle { text-align: center; color: var(--muted); margin-bottom: 2rem; }
 
     .card {
       background: var(--card);
       border-radius: var(--radius);
       padding: 1.75rem;
       box-shadow: var(--shadow);
-      margin-bottom: 1.75rem;
+      margin: 0 auto 1.75rem auto;
       max-width: 720px;
-      margin-inline: auto;
     }
 
-    label {
-      display: block;
-      margin-top: 1rem;
-      font-weight: 500;
-    }
+    label { display:block; margin-top:1rem; }
+    select, input { width: 100%; margin-top: 0.5rem; padding: 0.75rem; border-radius: 14px; border: 1px solid #e6dacf; }
 
-    select, input {
-      width: 100%;
-      margin-top: 0.5rem;
-      padding: 0.75rem;
-      border-radius: 14px;
-      border: 1px solid #e6dacf;
-    }
+    button { width: 100%; margin-top: 1.25rem; padding: 0.85rem; border-radius: 999px; border: none; background: var(--primary); color: #fff; font-weight: 600; cursor: pointer; }
+    button.secondary { background: var(--secondary); color: var(--text); border-radius: 14px; }
 
-    button {
-      width: 100%;
-      padding: 0.85rem;
-      margin-top: 1.25rem;
-      border-radius: 999px;
-      border: none;
-      font-weight: 600;
-      background: linear-gradient(180deg, #9c6b44, var(--primary));
-      color: #fff;
-      cursor: pointer;
-    }
+    .row { display:flex; gap:0.75rem; margin-top:1rem; flex-wrap:wrap; }
+    .row > * { flex:1; }
+    .hidden { display:none; }
 
-    button.secondary {
-      background: var(--secondary);
-      color: var(--text);
-      border-radius: 14px;
-    }
+    .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 0.75rem; margin-top: 1rem; }
+    .stat { background: #f6ede4; border-radius: 14px; padding: 0.85rem; text-align: center; }
 
-    .row {
-      display: flex;
-      gap: 0.75rem;
-      margin-top: 1rem;
-      flex-wrap: wrap;
-    }
-
-    .row > * { flex: 1; }
-
-    .hidden { display: none; }
-
-    .stats-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
-      gap: 0.75rem;
-      margin-top: 1rem;
-    }
-
-    .stat {
-      background: #f6ede4;
-      border-radius: 14px;
-      padding: 0.85rem;
-      text-align: center;
-    }
-
-    .stat strong {
-      display: block;
-      font-size: 1.25rem;
-    }
-
-    canvas {
-      margin-top: 1.25rem;
-      width: 100%;
-    }
+    .charts-container { display: flex; gap: 1rem; margin-top: 1.25rem; }
+    .charts-container canvas { flex:1; }
   </style>
 </head>
-
 <body>
   <h1>☕🧋 Coffee & Boba Logger</h1>
   <p class="subtitle">by Shannon</p>
 
   <div class="card">
-    <label>
-      What did you drink?
+    <label>What did you drink?
       <select id="drinkType">
         <option value="">Select one</option>
         <option value="coffee">☕ Coffee</option>
@@ -147,25 +85,26 @@
       </select>
     </label>
 
-    <label id="storeField" class="hidden">
-      Where did you get it?
-      <input id="store" placeholder="Starbucks, Home, Office…" />
+    <label id="storeField" class="hidden">Where did you get it?
+      <input id="store" />
     </label>
 
     <div id="coffeeExtras" class="hidden">
-      <label>
-        Did you pay for the coffee?
+      <label>Did you pay for the coffee?
         <select id="paid">
           <option value="">Select one</option>
           <option value="yes">Yes</option>
-          <option value="no">No (free / home / work)</option>
+          <option value="no">No</option>
         </select>
       </label>
     </div>
 
-    <label id="priceField" class="hidden">
-      How much did it cost?
-      <input id="price" type="number" step="0.01" placeholder="0.00" />
+    <label id="priceField" class="hidden">Price
+      <input id="price" type="number" step="0.01" />
+    </label>
+
+    <label id="quantityField" class="hidden">Quantity
+      <input id="quantity" type="number" min="1" value="1" />
     </label>
 
     <button id="saveBtn">Log drink</button>
@@ -180,17 +119,13 @@
     <h2>📊 Your year so far</h2>
     <div class="stats-grid">
       <div class="stat"><strong id="totalDrinks">0</strong>Total</div>
-      <div class="stat"><strong id="coffeeCount">0</strong>Coffee</div>
-      <div class="stat"><strong id="bobaCount">0</strong>Boba</div>
+      <div class="stat"><strong id="coffeeCount">0</strong></div>
+      <div class="stat"><strong id="bobaCount">0</strong></div>
       <div class="stat"><strong id="totalSpend">$0.00</strong>Spent</div>
     </div>
-
-    <canvas id="monthlyChart" height="200"></canvas>
-
-    <div class="row">
-      <button class="secondary" id="exportBtn">Export</button>
-      <button class="secondary" id="importBtn">Import</button>
-      <input id="importFile" type="file" class="hidden" />
+    <div class="charts-container">
+      <canvas id="coffeeChart" height="250"></canvas>
+      <canvas id="bobaChart" height="250"></canvas>
     </div>
   </div>
 
@@ -200,53 +135,131 @@ const drinkTypeEl = document.getElementById('drinkType');
 const storeField = document.getElementById('storeField');
 const coffeeExtras = document.getElementById('coffeeExtras');
 const priceField = document.getElementById('priceField');
+const quantityField = document.getElementById('quantityField');
+const storeInput = document.getElementById('store');
+const paidSelect = document.getElementById('paid');
+const priceInput = document.getElementById('price');
+const quantityInput = document.getElementById('quantity');
+const totalDrinksEl = document.getElementById('totalDrinks');
+const coffeeCountEl = document.getElementById('coffeeCount');
+const bobaCountEl = document.getElementById('bobaCount');
+const totalSpendEl = document.getElementById('totalSpend');
+const coffeeCanvas = document.getElementById('coffeeChart');
+const bobaCanvas = document.getElementById('bobaChart');
+const coffeeCtx = coffeeCanvas.getContext('2d');
+const bobaCtx = bobaCanvas.getContext('2d');
+
+let hoveredSlice = null;
+
+function getLogs() { return JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]'); }
+function saveLogs(logs) { localStorage.setItem(STORAGE_KEY, JSON.stringify(logs)); }
 
 drinkTypeEl.onchange = () => {
-  const t = drinkTypeEl.value;
-  storeField.classList.toggle('hidden', !t);
-  coffeeExtras.classList.toggle('hidden', t !== 'coffee');
-  priceField.classList.toggle('hidden', !t);
+  const type = drinkTypeEl.value;
+  storeField.classList.toggle('hidden', !type);
+  coffeeExtras.classList.toggle('hidden', type !== 'coffee');
+  priceField.classList.toggle('hidden', !type);
+  quantityField.classList.toggle('hidden', !type);
 };
 
 document.getElementById('saveBtn').onclick = () => {
-  const log = {
-    drinkType: drinkTypeEl.value,
-    store: store.value,
-    paid: paid?.value || null,
-    price: parseFloat(price.value || 0),
-    date: new Date().toISOString()
-  };
-  if (!log.drinkType || !log.store) return alert('Missing info');
-  const logs = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
-  logs.push(log);
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(logs));
-  location.reload();
+  const drinkType = drinkTypeEl.value;
+  const store = storeInput.value.trim();
+  const paid = paidSelect.value;
+  const price = parseFloat(priceInput.value || '0');
+  const quantity = parseInt(quantityInput.value || '1');
+  if (!drinkType || !store || (drinkType === 'coffee' && !paid)) { alert('Please fill all required fields'); return; }
+  const logs = getLogs();
+  for (let i=0;i<quantity;i++) logs.push({ drinkType, store, paid: drinkType==='coffee'?paid:null, price, date:new Date().toISOString() });
+  saveLogs(logs);
+  storeInput.value = priceInput.value = '';
+  paidSelect.value = '';
+  quantityInput.value = 1;
+  drinkTypeEl.value = '';
+  storeField.classList.add('hidden');
+  coffeeExtras.classList.add('hidden');
+  priceField.classList.add('hidden');
+  quantityField.classList.add('hidden');
+  render();
 };
 
 function render() {
-  const logs = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
-  historyList.innerHTML = '';
+  const logs = getLogs();
+  const history = document.getElementById('historyList');
+  history.innerHTML = '';
   logs.forEach((l,i)=>{
-    const r=document.createElement('div');
-    r.className='row';
-    r.innerHTML=`<input disabled value="${l.drinkType}">
-      <input value="${l.store}">
-      <input type="number" value="${l.price||0}">
-      <button class="secondary">Save</button>
-      <button class="secondary">Delete</button>`;
-    r.children[3].onclick=()=>{
-      logs[i].store=r.children[1].value;
-      logs[i].price=parseFloat(r.children[2].value||0);
-      localStorage.setItem(STORAGE_KEY,JSON.stringify(logs));
-    };
-    r.children[4].onclick=()=>{
-      logs.splice(i,1);
-      localStorage.setItem(STORAGE_KEY,JSON.stringify(logs));
-      render();
-    };
-    historyList.appendChild(r);
+    const row=document.createElement('div');
+    row.className='row';
+    row.innerHTML=`<input disabled value="${l.drinkType}"><input value="${l.store}"><input type=number step=0.01 value="${l.price||0}"><button class="secondary">Save</button><button class="secondary">Delete</button>`;
+    const [,storeEl,priceEl,saveBtn,delBtn]=row.children;
+    saveBtn.onclick=()=>{ logs[i].store=storeEl.value; logs[i].price=parseFloat(priceEl.value||0); saveLogs(logs); render(); };
+    delBtn.onclick=()=>{ logs.splice(i,1); saveLogs(logs); render(); };
+    history.appendChild(row);
+  });
+  const year=new Date().getFullYear();
+  const thisYear=logs.filter(l=>new Date(l.date).getFullYear()===year);
+  const coffee=thisYear.filter(l=>l.drinkType==='coffee');
+  const boba=thisYear.filter(l=>l.drinkType==='boba');
+  const spend=thisYear.reduce((s,l)=>s+(l.price||0),0);
+  totalDrinksEl.textContent=thisYear.length;
+  coffeeCountEl.textContent=coffee.length;
+  bobaCountEl.textContent=boba.length;
+  totalSpendEl.textContent=`$${spend.toFixed(2)}`;
+  drawPie(coffeeCtx, coffee, '#8b5e3c');
+  drawPie(bobaCtx, boba, 'var(--boba-color)');
+}
+
+function drawPie(ctx, logs, color){
+  ctx.clearRect(0,0,ctx.canvas.width,ctx.canvas.height);
+  const storeCounts = {};
+  logs.forEach(l=>storeCounts[l.store]=(storeCounts[l.store]||0)+1);
+  const total = logs.length;
+  if(total===0) return;
+  let startAngle = -0.5 * Math.PI;
+  const centerX = ctx.canvas.width/2;
+  const centerY = ctx.canvas.height/2;
+  const radius = Math.min(centerX, centerY)-10;
+
+  Object.entries(storeCounts).forEach(([store,count])=>{
+    const sliceAngle = (count/total)*2*Math.PI;
+    ctx.beginPath();
+    ctx.moveTo(centerX, centerY);
+    ctx.arc(centerX, centerY, radius, startAngle, startAngle+sliceAngle);
+    ctx.closePath();
+    ctx.fillStyle = (hoveredSlice && hoveredSlice.store === store) ? 'var(--highlight-color)' : color;
+    ctx.fill();
+    startAngle += sliceAngle;
   });
 }
+
+coffeeCanvas.addEventListener('mousemove', e => handleHover(e, coffeeCtx, 'coffee'));
+bobaCanvas.addEventListener('mousemove', e => handleHover(e, bobaCtx, 'boba'));
+
+function handleHover(e, ctx, type) {
+  const rect = ctx.canvas.getBoundingClientRect();
+  const x = e.clientX - rect.left;
+  const y = e.clientY - rect.top;
+  const logs = getLogs().filter(l=>l.drinkType===type);
+  const storeCounts = {};
+  logs.forEach(l=>storeCounts[l.store]=(storeCounts[l.store]||0)+1);
+  const centerX = ctx.canvas.width/2;
+  const centerY = ctx.canvas.height/2;
+  const dx = x - centerX;
+  const dy = y - centerY;
+  const distance = Math.sqrt(dx*dx + dy*dy);
+  const radius = Math.min(centerX, centerY)-10;
+  if(distance>radius) { hoveredSlice=null; render(); return; }
+  let angle = Math.atan2(dy, dx);
+  if(angle < -0.5 * Math.PI) angle += 2*Math.PI;
+  let startAngle = -0.5*Math.PI;
+  for(const [store,count] of Object.entries(storeCounts)){
+    const sliceAngle = (count/logs.length)*2*Math.PI;
+    if(angle >= startAngle && angle < startAngle + sliceAngle){ hoveredSlice={store,count}; break; }
+    startAngle += sliceAngle;
+  }
+  render();
+}
+
 render();
 </script>
 </body>
