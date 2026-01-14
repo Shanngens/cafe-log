@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Coffee & Boba Logger</title>
+  <style>
+    :root {
+      --bg: #f3ede7;
+      --card: #fffaf5;
+      --primary: #8b5e3c;
+      --primary-hover: #7a4f30;
+      --secondary: #efe6dc;
+      --text: #3b2f2a;
+      --muted: #8a7e74;
+      --radius: 16px;
+      --shadow: 0 12px 30px rgba(60,40,20,0.08);
+    }
+
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg: #1c1815;
+        --card: #26211d;
+        --primary: #c08a5a;
+        --primary-hover: #b0794a;
+        --secondary: #332c26;
+        --text: #f3ede7;
+        --muted: #b7a99c;
+        --shadow: 0 14px 34px rgba(0,0,0,0.45);
+      }
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      font-family: "Satoshi", "General Sans", "Inter", "DM Sans", system-ui, sans-serif;
+      background: linear-gradient(180deg, #faf6f1, var(--bg));
+      padding: 3.5rem 1.25rem 2.5rem;
+      max-width: 860px;
+      margin: auto;
+      color: var(--text);
+    }
+
+    h1 {
+      text-align: center;
+      font-size: 2.1rem;
+      margin-bottom: 0.6rem;
+      font-weight: 600;
+    }
+
+    .subtitle {
+      text-align: center;
+      color: var(--muted);
+      margin-bottom: 2rem;
+    }
+
+    .card {
+      background: var(--card);
+      border-radius: var(--radius);
+      padding: 1.75rem;
+      box-shadow: var(--shadow);
+      margin-bottom: 1.75rem;
+      max-width: 720px;
+      margin-inline: auto;
+    }
+
+    label {
+      display: block;
+      margin-top: 1rem;
+      font-weight: 500;
+    }
+
+    select, input {
+      width: 100%;
+      margin-top: 0.5rem;
+      padding: 0.75rem;
+      border-radius: 14px;
+      border: 1px solid #e6dacf;
+    }
+
+    button {
+      width: 100%;
+      padding: 0.85rem;
+      margin-top: 1.25rem;
+      border-radius: 999px;
+      border: none;
+      font-weight: 600;
+      background: linear-gradient(180deg, #9c6b44, var(--primary));
+      color: #fff;
+      cursor: pointer;
+    }
+
+    button.secondary {
+      background: var(--secondary);
+      color: var(--text);
+      border-radius: 14px;
+    }
+
+    .row {
+      display: flex;
+      gap: 0.75rem;
+      margin-top: 1rem;
+      flex-wrap: wrap;
+    }
+
+    .row > * { flex: 1; }
+
+    .hidden { display: none; }
+
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+      gap: 0.75rem;
+      margin-top: 1rem;
+    }
+
+    .stat {
+      background: #f6ede4;
+      border-radius: 14px;
+      padding: 0.85rem;
+      text-align: center;
+    }
+
+    .stat strong {
+      display: block;
+      font-size: 1.25rem;
+    }
+
+    canvas {
+      margin-top: 1.25rem;
+      width: 100%;
+    }
+  </style>
+</head>
+
+<body>
+  <h1>☕🧋 Coffee & Boba Logger</h1>
+  <p class="subtitle">by Shannon</p>
+
+  <div class="card">
+    <label>
+      What did you drink?
+      <select id="drinkType">
+        <option value="">Select one</option>
+        <option value="coffee">☕ Coffee</option>
+        <option value="boba">🧋 Boba</option>
+      </select>
+    </label>
+
+    <label id="storeField" class="hidden">
+      Where did you get it?
+      <input id="store" placeholder="Starbucks, Home, Office…" />
+    </label>
+
+    <div id="coffeeExtras" class="hidden">
+      <label>
+        Did you pay for the coffee?
+        <select id="paid">
+          <option value="">Select one</option>
+          <option value="yes">Yes</option>
+          <option value="no">No (free / home / work)</option>
+        </select>
+      </label>
+    </div>
+
+    <label id="priceField" class="hidden">
+      How much did it cost?
+      <input id="price" type="number" step="0.01" placeholder="0.00" />
+    </label>
+
+    <button id="saveBtn">Log drink</button>
+  </div>
+
+  <div class="card">
+    <h2>📜 History</h2>
+    <div id="historyList"></div>
+  </div>
+
+  <div class="card">
+    <h2>📊 Your year so far</h2>
+    <div class="stats-grid">
+      <div class="stat"><strong id="totalDrinks">0</strong>Total</div>
+      <div class="stat"><strong id="coffeeCount">0</strong>Coffee</div>
+      <div class="stat"><strong id="bobaCount">0</strong>Boba</div>
+      <div class="stat"><strong id="totalSpend">$0.00</strong>Spent</div>
+    </div>
+
+    <canvas id="monthlyChart" height="200"></canvas>
+
+    <div class="row">
+      <button class="secondary" id="exportBtn">Export</button>
+      <button class="secondary" id="importBtn">Import</button>
+      <input id="importFile" type="file" class="hidden" />
+    </div>
+  </div>
+
+<script>
+const STORAGE_KEY = 'drinkLogsV2';
+const drinkTypeEl = document.getElementById('drinkType');
+const storeField = document.getElementById('storeField');
+const coffeeExtras = document.getElementById('coffeeExtras');
+const priceField = document.getElementById('priceField');
+
+drinkTypeEl.onchange = () => {
+  const t = drinkTypeEl.value;
+  storeField.classList.toggle('hidden', !t);
+  coffeeExtras.classList.toggle('hidden', t !== 'coffee');
+  priceField.classList.toggle('hidden', !t);
+};
+
+document.getElementById('saveBtn').onclick = () => {
+  const log = {
+    drinkType: drinkTypeEl.value,
+    store: store.value,
+    paid: paid?.value || null,
+    price: parseFloat(price.value || 0),
+    date: new Date().toISOString()
+  };
+  if (!log.drinkType || !log.store) return alert('Missing info');
+  const logs = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
+  logs.push(log);
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(logs));
+  location.reload();
+};
+
+function render() {
+  const logs = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
+  historyList.innerHTML = '';
+  logs.forEach((l,i)=>{
+    const r=document.createElement('div');
+    r.className='row';
+    r.innerHTML=`<input disabled value="${l.drinkType}">
+      <input value="${l.store}">
+      <input type="number" value="${l.price||0}">
+      <button class="secondary">Save</button>
+      <button class="secondary">Delete</button>`;
+    r.children[3].onclick=()=>{
+      logs[i].store=r.children[1].value;
+      logs[i].price=parseFloat(r.children[2].value||0);
+      localStorage.setItem(STORAGE_KEY,JSON.stringify(logs));
+    };
+    r.children[4].onclick=()=>{
+      logs.splice(i,1);
+      localStorage.setItem(STORAGE_KEY,JSON.stringify(logs));
+      render();
+    };
+    historyList.appendChild(r);
+  });
+}
+render();
+</script>
+</body>
+</html>
