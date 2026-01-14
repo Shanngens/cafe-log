@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Coffee & Boba Logger</title>
+  <style>
+    body {
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: #fafafa;
+      padding: 1rem;
+      max-width: 720px;
+      margin: auto;
+    }
+    h1 { font-size: 1.6rem; }
+    h2 { margin-top: 2rem; }
+    label { display: block; margin-top: 1rem; }
+    select, input, button {
+      margin-top: 0.5rem;
+      padding: 0.6rem;
+      width: 100%;
+      font-size: 1rem;
+    }
+    button {
+      background: #111;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      margin-top: 1.2rem;
+    }
+    button.secondary {
+      background: #e5e5e5;
+      color: #111;
+    }
+    .row { display: flex; gap: 0.75rem; flex-wrap: wrap; }
+    .row > * { flex: 1; }
+    .hidden { display: none; }
+    canvas { max-width: 100%; margin-top: 1rem; }
+    .stats {
+      margin-top: 2rem;
+      padding-top: 1rem;
+      border-top: 1px solid #ddd;
+    }
+  </style>
+</head>
+<body>
+  <h1>☕🧋 Coffee & Boba Logger</h1>
+
+  <label>
+    What did you drink?
+    <select id="drinkType">
+      <option value="">Select one</option>
+      <option value="coffee">Coffee</option>
+      <option value="boba">Boba</option>
+    </select>
+  </label>
+
+  <label id="storeField" class="hidden">
+    Where did you get it?
+    <input id="store" placeholder="e.g. Starbucks, Home, Office" />
+  </label>
+
+  <div id="coffeeExtras" class="hidden">
+    <label>
+      Did you pay for the coffee?
+      <select id="paid">
+        <option value="">Select one</option>
+        <option value="yes">Yes</option>
+        <option value="no">No (free / home / work)</option>
+      </select>
+    </label>
+  </div>
+
+  <label id="priceField" class="hidden">
+    How much did it cost? (USD)
+    <input id="price" type="number" step="0.01" placeholder="0.00" />
+  </label>
+
+  <button id="saveBtn">Log drink</button>
+
+  <div class="stats">
+    <h2>📊 Year-to-date stats</h2>
+    <p id="statsText">No data yet.</p>
+    <canvas id="monthlyChart" height="200"></canvas>
+
+    <div class="row">
+      <button class="secondary" id="exportBtn">Export CSV</button>
+      <button class="secondary" id="importBtn">Import JSON</button>
+      <input id="importFile" type="file" class="hidden" />
+    </div>
+  </div>
+
+  <script>
+    const drinkTypeEl = document.getElementById('drinkType');
+    const storeField = document.getElementById('storeField');
+    const coffeeExtras = document.getElementById('coffeeExtras');
+    const priceField = document.getElementById('priceField');
+    const storeInput = document.getElementById('store');
+    const paidSelect = document.getElementById('paid');
+    const priceInput = document.getElementById('price');
+    const statsText = document.getElementById('statsText');
+    const canvas = document.getElementById('monthlyChart');
+    const ctx = canvas.getContext('2d');
+
+    const STORAGE_KEY = 'drinkLogsV2';
+
+    drinkTypeEl.addEventListener('change', () => {
+      const type = drinkTypeEl.value;
+      storeField.classList.toggle('hidden', !type);
+      coffeeExtras.classList.toggle('hidden', type !== 'coffee');
+      priceField.classList.toggle('hidden', false);
+    });
+
+    document.getElementById('saveBtn').addEventListener('click', () => {
+      const drinkType = drinkTypeEl.value;
+      const store = storeInput.value.trim();
+      const paid = paidSelect.value;
+      const price = parseFloat(priceInput.value || '0');
+
+      if (!drinkType || !store || (drinkType === 'coffee' && !paid)) {
+        alert('Please fill out all required fields.');
+        return;
+      }
+
+      const log = {
+        drinkType,
+        store,
+        paid: drinkType === 'coffee' ? paid : null,
+        price,
+        date: new Date().toISOString()
+      };
+
+      const logs = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
+      logs.push(log);
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(logs));
+
+      storeInput.value = '';
+      paidSelect.value = '';
+      priceInput.value = '';
+      drinkTypeEl.value = '';
+      storeField.classList.add('hidden');
+      coffeeExtras.classList.add('hidden');
+      priceField.classList.add('hidden');
+
+      renderStats();
+    });
+
+    function renderStats() {
+      const logs = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
+      if (!logs.length) {
+        statsText.textContent = 'No data yet.';
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        return;
+      }
+
+      const year = new Date().getFullYear();
+      const thisYear = logs.filter(l => new Date(l.date).getFullYear() === year);
+      const coffee = thisYear.filter(l => l.drinkType === 'coffee');
+      const boba = thisYear.filter(l => l.drinkType === 'boba');
+      const paidCoffee = coffee.filter(l => l.paid === 'yes');
+      const totalSpend = thisYear.reduce((sum, l) => sum + (l.price || 0), 0);
+
+      statsText.innerHTML = `
+        ${thisYear.length} total drinks in ${year}<br>
+        ☕ Coffee: ${coffee.length} (Paid: ${paidCoffee.length}, Free: ${coffee.length - paidCoffee.length})<br>
+        🧋 Boba: ${boba.length}<br>
+        💸 Total spend: $${totalSpend.toFixed(2)}
+      `;
+
+      drawMonthlyChart(thisYear);
+    }
+
+    function drawMonthlyChart(logs) {
+      const monthly = Array(12).fill(0);
+      logs.forEach(l => monthly[new Date(l.date).getMonth()]++);
+
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      const max = Math.max(...monthly, 1);
+      const barWidth = canvas.width / 12;
+
+      monthly.forEach((val, i) => {
+        const h = (val / max) * (canvas.height - 20);
+        ctx.fillRect(i * barWidth + 5, canvas.height - h, barWidth - 10, h);
+        ctx.fillText(i + 1, i * barWidth + barWidth / 2, canvas.height - 5);
+      });
+    }
+
+    document.getElementById('exportBtn').addEventListener('click', () => {
+      const logs = localStorage.getItem(STORAGE_KEY) || '[]';
+      const blob = new Blob([logs], { type: 'application/json' });
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = 'coffee-boba-logs.json';
+      a.click();
+    });
+
+    document.getElementById('importBtn').addEventListener('click', () => {
+      document.getElementById('importFile').click();
+    });
+
+    document.getElementById('importFile').addEventListener('change', e => {
+      const file = e.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = () => {
+        localStorage.setItem(STORAGE_KEY, reader.result);
+        renderStats();
+      };
+      reader.readAsText(file);
+    });
+
+    renderStats();
+  </script>
+</body>
+</html>
