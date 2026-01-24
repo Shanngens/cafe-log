@@ -3,252 +3,166 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Coffee & Boba Logger</title>
+  <title>Coffee, Boba & Matcha Logger</title>
   <style>
     :root {
-      --bg: #f3ede7;
-      --card: #fffaf5;
-      --primary: #8b5e3c;
-      --secondary: #efe6dc;
-      --text: #3b2f2a;
-      --muted: #8a7e74;
-      --radius: 16px;
-      --shadow: 0 12px 30px rgba(60,40,20,0.08);
-      --boba-color: #cbb69a;
-      --highlight-color: #ffd966;
+      --bg:#f3ede7; --card:#fffaf5; --primary:#8b5e3c; --secondary:#efe6dc;
+      --text:#3b2f2a; --muted:#8a7e74; --radius:16px;
+      --shadow:0 12px 30px rgba(60,40,20,0.08);
+      --coffee:#8b5e3c; --boba:#cbb69a; --matcha:#9db18c;
     }
-
     @media (prefers-color-scheme: dark) {
       :root {
-        --bg: #1c1815;
-        --card: #26211d;
-        --primary: #c08a5a;
-        --secondary: #332c26;
-        --text: #f3ede7;
-        --muted: #b7a99c;
-        --shadow: 0 14px 34px rgba(0,0,0,0.45);
-        --boba-color: #d2bfa7;
-        --highlight-color: #f4d27c;
+        --bg:#1c1815; --card:#26211d; --primary:#c08a5a; --secondary:#332c26;
+        --text:#f3ede7; --muted:#b7a99c; --shadow:0 14px 34px rgba(0,0,0,0.45);
       }
     }
-
-    * { box-sizing: border-box; }
-    body { font-family: "Satoshi", "General Sans", "Inter", system-ui, sans-serif; background: linear-gradient(180deg, #faf6f1, var(--bg)); padding: 3.5rem 1.25rem 2.5rem; max-width: none; margin:0; color:var(--text); }
-    .container { max-width: 860px; margin: 0 auto; }
-    h1 { text-align:center; margin-bottom:0.5rem; font-size:2.1rem; font-weight:600; }
-    .subtitle { text-align:center; color:var(--muted); margin-bottom:2rem; }
-    .card { background:var(--card); border-radius:var(--radius); padding:1.75rem; box-shadow:var(--shadow); margin:0 auto 1.75rem auto; max-width: 860px; }
-    label { display:block; margin-top:1rem; }
-    select,input { width:100%; margin-top:0.5rem; padding:0.75rem; border-radius:14px; border:1px solid #e6dacf; }
-    button { width:100%; margin-top:1.25rem; padding:0.85rem; border-radius:999px; border:none; background:var(--primary); color:#fff; font-weight:600; cursor:pointer; }
-    button.secondary { background:var(--secondary); color:var(--text); border-radius:14px; }
-    .row { display:flex; gap:0.75rem; margin-top:1rem; flex-wrap:wrap; }
-    .row > * { flex:1; }
-    .hidden { display:none; }
-    .stats-grid { display:grid; grid-template-columns: repeat(auto-fit, minmax(140px,1fr)); gap:0.75rem; margin-top:1rem; }
-    .stat { background:#f6ede4; border-radius:14px; padding:0.85rem; text-align:center; }
-    .stat-label { margin-left: 0.25rem; color: var(--muted); font-weight: 500; }
-    .charts-container { display:flex; gap:1rem; margin-top:1.25rem; }
-    .charts-container canvas { flex:1; }
-    /* Sections inherit body padding; no extra side padding */
-    .page-section { padding: 0; }
-    .tabs { display:flex; justify-content:flex-start; gap:0.5rem; margin-bottom:1.75rem; }
-    .tab { padding:0.6rem 1.25rem; border-radius:999px; border:none; background:var(--secondary); color:var(--text); cursor:pointer; font-weight:500; }
-    .tab.active { background:var(--primary); color:#fff; }
-    .charts-container canvas { flex:1; }
+    *{box-sizing:border-box}
+    body{margin:0;padding:3.5rem 1.25rem 3.5rem;font-family:"Satoshi","Inter",system-ui,sans-serif;background:linear-gradient(180deg,#faf6f1,var(--bg));color:var(--text)}
+    .container{max-width:860px;margin:0 auto}
+    h1{text-align:center;margin-bottom:.4rem}
+    .subtitle{text-align:center;color:var(--muted);margin-bottom:2rem}
+    .card{background:var(--card);border-radius:var(--radius);padding:2rem;box-shadow:var(--shadow);margin-bottom:2rem}
+    label{display:block;margin-top:1rem}
+    select,input{width:100%;margin-top:.5rem;padding:.75rem;border-radius:14px;border:1px solid #e6dacf}
+    button{width:100%;margin-top:1.25rem;padding:.85rem;border-radius:999px;border:none;background:var(--primary);color:#fff;font-weight:600;cursor:pointer}
+    button.secondary{background:var(--secondary);color:var(--text)}
+    .hidden{display:none}
+    .stats-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:.75rem;margin-top:1rem}
+    .stat{background:#f6ede4;border-radius:14px;padding:.85rem;text-align:center}
+    .stat-label{margin-left:.25rem;color:var(--muted)}
+    .tabs{display:flex;gap:.5rem;margin-bottom:1.75rem}
+    .tab{padding:.6rem 1.25rem;border-radius:999px;border:none;background:var(--secondary);cursor:pointer}
+    .tab.active{background:var(--primary);color:#fff}
+    canvas{max-width:100%; margin-top:1.25rem; margin-bottom:1.25rem;}
+    .bottom-metrics{margin-top:1rem;display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:.75rem; padding-top:1rem; padding-bottom:1rem;}
   </style>
 </head>
 <body>
-  <h1>☕🧋 Coffee & Boba Logger</h1>
-  <p class="subtitle">by Shannon</p>
+  <h1>☕ Cafe Log  ☕</h1>
+  <p class="subtitle">For Shannon 2026</p>
 
-  <nav class="container" role="tablist"><div class="tabs">
-    <button class="tab active" role="tab" aria-selected="true" data-tab="main">Logger</button>
-    <button class="tab" role="tab" aria-selected="false" data-tab="history">History</button>
+  <nav class="container"><div class="tabs">
+    <button class="tab active" data-tab="main">Logger</button>
+    <button class="tab" data-tab="history">History</button>
   </div></nav>
 
-  <section id="mainTab" class="page-section container">
+  <section id="mainTab" class="container">
     <div class="card">
       <label>What did you drink?
         <select id="drinkType">
           <option value="">Select one</option>
           <option value="coffee">☕ Coffee</option>
           <option value="boba">🧋 Boba</option>
+          <option value="matcha">🍵 Matcha</option>
         </select>
       </label>
       <label id="storeField" class="hidden">Where did you get it?
         <input id="store" />
       </label>
-      <div id="coffeeExtras" class="hidden">
-        <label>Did you pay for the coffee?
-          <select id="paid">
-            <option value="">Select one</option>
-            <option value="yes">Yes</option>
-            <option value="no">No</option>
-          </select>
-        </label>
-      </div>
+      <label id="paidField" class="hidden">Did you pay?
+        <select id="paid"><option value="">Select</option><option>yes</option><option>no</option></select>
+      </label>
       <label id="priceField" class="hidden">Price
         <input id="price" type="number" step="0.01" />
       </label>
-      <label id="quantityField" class="hidden">Quantity
-        <input id="quantity" type="number" min="1" value="1" />
+      <label id="qtyField" class="hidden">Quantity
+        <input id="qty" type="number" min="1" value="1" />
       </label>
-      <button id="saveBtn">Log drink</button>
+      <button id="save">Log drink</button>
     </div>
 
     <div class="card">
       <h2>📊 Your year so far</h2>
-      <div class="stats-grid">
-        <div class="stat"><strong id="totalDrinks">0</strong><span class="stat-label"> Total</span></div>
-        <div class="stat"><strong id="coffeeCount">0</strong></div>
-        <div class="stat"><strong id="bobaCount">0</strong></div>
+      <div class="stats-grid" id="topStats">
+        <div class="stat"><strong id="total">0</strong><span class="stat-label"> Total</span></div>
+        <div class="stat"><strong id="coffeeCount">0</strong><span class="stat-label"> Coffee</span></div>
+        <div class="stat"><strong id="bobaCount">0</strong><span class="stat-label"> Boba</span></div>
+        <div class="stat"><strong id="matchaCount">0</strong><span class="stat-label"> Matcha</span></div>
+      </div>
+      <canvas id="pie" height="260"></canvas>
+      <div class="bottom-metrics">
         <div class="stat"><strong id="totalSpend">$0.00</strong><span class="stat-label"> Spent</span></div>
-      </div>
-      <div class="charts-container">
-        <canvas id="coffeeChart" height="250"></canvas>
-        <canvas id="bobaChart" height="250"></canvas>
-      </div>
-      <div class="card" style="margin-top:1.5rem">
-        <h3 style="margin-bottom:0.75rem">🗓 Time breakdown</h3>
-        <div class="stats-grid">
-          <div class="stat"><strong id="weekCount">0</strong><span class="stat-label"> This week</span></div>
-          <div class="stat"><strong id="monthCount">0</strong><span class="stat-label"> This month</span></div>
-        </div>
+        <div class="stat"><strong id="weekCount">0</strong><span class="stat-label"> This week</span></div>
+        <div class="stat"><strong id="monthCount">0</strong><span class="stat-label"> This month</span></div>
       </div>
     </div>
   </section>
 
-  <section id="historyTab" class="hidden page-section container">
-    <div class="card">
-      <h2>📜 History</h2>
-      <div id="historyList"></div>
-    </div>
+  <section id="historyTab" class="container hidden">
+    <div class="card"><h2>📜 History</h2><div id="history"></div></div>
   </section>
 
 <script>
-// -------------------------
-// LocalStorage Version
-// -------------------------
+const $=id=>document.getElementById(id);
+const getLogs=()=>JSON.parse(localStorage.getItem('drinkLogs')||'[]');
+const saveLogs=l=>localStorage.setItem('drinkLogs',JSON.stringify(l));
 
-function getLogs() { return JSON.parse(localStorage.getItem('drinkLogsV2') || '[]'); }
-function saveLogs(logs) { localStorage.setItem('drinkLogsV2', JSON.stringify(logs)); }
-
-const drinkTypeEl = document.getElementById('drinkType');
-const storeField = document.getElementById('storeField');
-const coffeeExtras = document.getElementById('coffeeExtras');
-const priceField = document.getElementById('priceField');
-const quantityField = document.getElementById('quantityField');
-const storeInput = document.getElementById('store');
-const paidSelect = document.getElementById('paid');
-const priceInput = document.getElementById('price');
-const quantityInput = document.getElementById('quantity');
-const historyList = document.getElementById('historyList');
-const totalDrinksEl = document.getElementById('totalDrinks');
-const coffeeCountEl = document.getElementById('coffeeCount');
-const bobaCountEl = document.getElementById('bobaCount');
-const totalSpendEl = document.getElementById('totalSpend');
-const coffeeCanvas = document.getElementById('coffeeChart');
-const bobaCanvas = document.getElementById('bobaChart');
-const coffeeCtx = coffeeCanvas.getContext('2d');
-const bobaCtx = bobaCanvas.getContext('2d');
-let hoveredSlice=null;
-
-drinkTypeEl.onchange=()=>{
-  const type=drinkTypeEl.value;
-  storeField.classList.toggle('hidden',!type);
-  coffeeExtras.classList.toggle('hidden',type!=='coffee');
-  priceField.classList.toggle('hidden',!type);
-  quantityField.classList.toggle('hidden',!type);
-};
-
-document.getElementById('saveBtn').onclick=()=>{
-  const drinkType=drinkTypeEl.value;
-  const store=storeInput.value.trim();
-  const paid=paidSelect.value;
-  const price=parseFloat(priceInput.value||'0');
-  const quantity=parseInt(quantityInput.value||'1');
-  if(!drinkType||!store||(drinkType==='coffee'&&!paid)){ alert('Please fill all required fields'); return; }
-  const logs=getLogs();
-  for(let i=0;i<quantity;i++) logs.push({drinkType,store,paid:drinkType==='coffee'?paid:null,price,date:new Date().toISOString()});
-  saveLogs(logs);
-  storeInput.value=priceInput.value='';
-  paidSelect.value='';
-  quantityInput.value=1;
-  drinkTypeEl.value='';
-  storeField.classList.add('hidden');
-  coffeeExtras.classList.add('hidden');
-  priceField.classList.add('hidden');
-  quantityField.classList.add('hidden');
-  // Tabs
-const tabs=document.querySelectorAll('.tab');
-const mainTab=document.getElementById('mainTab');
-const historyTab=document.getElementById('historyTab');
-
-tabs.forEach(tab=>{
-  tab.onclick=()=>{
-    tabs.forEach(t=>{t.classList.remove('active');t.setAttribute('aria-selected','false');});
-    tab.classList.add('active'); tab.setAttribute('aria-selected','true');
-    const isHistory=tab.dataset.tab==='history';
-    mainTab.classList.toggle('hidden',isHistory);
-    historyTab.classList.toggle('hidden',!isHistory);
-    location.hash=tab.dataset.tab;
+document.querySelectorAll('.tab').forEach(btn=>{
+  btn.onclick=()=>{
+    document.querySelectorAll('.tab').forEach(b=>b.classList.remove('active'));
+    btn.classList.add('active');
+    $('mainTab').classList.toggle('hidden',btn.dataset.tab!=='main');
+    $('historyTab').classList.toggle('hidden',btn.dataset.tab!=='history');
   };
 });
 
-if(location.hash==="#history") tabs[1].click();
+$('drinkType').onchange=()=>{
+  const t=$('drinkType').value;
+  $('storeField').classList.toggle('hidden',!t);
+  $('priceField').classList.toggle('hidden',!t);
+  $('qtyField').classList.toggle('hidden',!t);
+  $('paidField').classList.toggle('hidden',!(t==='coffee'||t==='matcha'));
+};
 
-render();
+$('save').onclick=()=>{
+  const t=$('drinkType').value, store=$('store').value.trim();
+  const paid=$('paid').value, price=parseFloat($('price').value||0);
+  const qty=parseInt($('qty').value||1);
+  if(!t||!store||((t==='coffee'||t==='matcha')&&!paid)){
+    alert('Please complete all required fields'); return;
+  }
+  const logs=getLogs();
+  for(let i=0;i<qty;i++) logs.push({drinkType:t,store,paid:((t==='coffee'||t==='matcha')?paid:null),price,date:new Date().toISOString()});
+  saveLogs(logs);
+  $('store').value=$('price').value=''; $('qty').value=1; $('paid').value=''; $('drinkType').value='';
+  ['storeField','priceField','qtyField','paidField'].forEach(id=>$(id).classList.add('hidden'));
+  render();
 };
 
 function render(){
   const logs=getLogs();
-  historyList.innerHTML='';
+  $('history').innerHTML='';
   logs.forEach((l,i)=>{
     const row=document.createElement('div');
-    row.className='row';
-    row.innerHTML=`<input disabled value="${l.drinkType}"><input value="${l.store}"><input type=number step=0.01 value="${l.price||0}"><button class='secondary'>Save</button><button class='secondary'>Delete</button>`;
-    const [,storeEl,priceEl,saveBtn,delBtn]=row.children;
-    saveBtn.onclick=()=>{ logs[i].store=storeEl.value; logs[i].price=parseFloat(priceEl.value||0); saveLogs(logs); render(); };
-    delBtn.onclick=()=>{ logs.splice(i,1); saveLogs(logs); render(); };
-    historyList.appendChild(row);
+    row.innerHTML=`${l.drinkType} – ${l.store} ($${l.price}) <button data-i="${i}">✕</button>`;
+    row.querySelector('button').onclick=()=>{logs.splice(i,1);saveLogs(logs);render();};
+    $('history').appendChild(row);
   });
-  const year=new Date().getFullYear();
-  const thisYear=logs.filter(l=>new Date(l.date).getFullYear()===year);
-  const coffee=thisYear.filter(l=>l.drinkType==='coffee');
-  const boba=thisYear.filter(l=>l.drinkType==='boba');
-  const spend=thisYear.reduce((s,l)=>s+(l.price||0),0);
-  totalDrinksEl.textContent=thisYear.length;
-  coffeeCountEl.textContent=coffee.length;
-  bobaCountEl.textContent=boba.length;
-  totalSpendEl.textContent=`$${spend.toFixed(2)}`;
+  $('total').textContent=logs.length;
+  const c=logs.filter(l=>l.drinkType==='coffee').length;
+  const b=logs.filter(l=>l.drinkType==='boba').length;
+  const m=logs.filter(l=>l.drinkType==='matcha').length;
+  $('coffeeCount').textContent=c; $('bobaCount').textContent=b; $('matchaCount').textContent=m;
 
-  // Weekly / Monthly counts
+  const spend=logs.reduce((s,l)=>s+(l.price||0),0);
+  $('totalSpend').textContent=`$${spend.toFixed(2)}`;
+
   const now=new Date();
   const startOfWeek=new Date(now); startOfWeek.setDate(now.getDate()-now.getDay()); startOfWeek.setHours(0,0,0,0);
   const startOfMonth=new Date(now.getFullYear(),now.getMonth(),1);
-  const weekCount=thisYear.filter(l=>new Date(l.date)>=startOfWeek).length;
-  const monthCount=thisYear.filter(l=>new Date(l.date)>=startOfMonth).length;
-  document.getElementById('weekCount').textContent=weekCount;
-  document.getElementById('monthCount').textContent=monthCount;
-  drawPie(coffeeCtx,coffee,'#8b5e3c');
-  drawPie(bobaCtx,boba,'var(--boba-color)');
+  $('weekCount').textContent=logs.filter(l=>new Date(l.date)>=startOfWeek).length;
+  $('monthCount').textContent=logs.filter(l=>new Date(l.date)>=startOfMonth).length;
+
+  drawPie(c,b,m);
 }
 
-function drawPie(ctx,logs,color){
-  ctx.clearRect(0,0,ctx.canvas.width,ctx.canvas.height);
-  const storeCounts={};
-  logs.forEach(l=>storeCounts[l.store]=(storeCounts[l.store]||0)+1);
-  const total=logs.length;
-  if(total===0) return;
-  let startAngle=-0.5*Math.PI;
-  const centerX=ctx.canvas.width/2,centerY=ctx.canvas.height/2,radius=Math.min(centerX,centerY)-10;
-  Object.entries(storeCounts).forEach(([store,count])=>{
-    const sliceAngle=(count/total)*2*Math.PI;
-    ctx.beginPath(); ctx.moveTo(centerX,centerY); ctx.arc(centerX,centerY,radius,startAngle,startAngle+sliceAngle); ctx.closePath();
-    ctx.fillStyle=(hoveredSlice&&hoveredSlice.store===store)?'var(--highlight-color)':color;
-    ctx.fill(); startAngle+=sliceAngle;
-  });
+function drawPie(c,b,m){
+  const ctx=$('pie').getContext('2d'); ctx.clearRect(0,0,300,300);
+  const data=[[c,'#8b5e3c'],[b,'#cbb69a'],[m,'#9db18c']].filter(d=>d[0]>0);
+  const total=data.reduce((s,d)=>s+d[0],0); if(!total) return;
+  let a=-.5*Math.PI; const cx=150,cy=130,r=110;
+  data.forEach(d=>{const ang=d[0]/total*2*Math.PI;ctx.beginPath();ctx.moveTo(cx,cy);ctx.arc(cx,cy,r,a,a+ang);ctx.closePath();ctx.fillStyle=d[1];ctx.fill();a+=ang;});
 }
 
 render();
