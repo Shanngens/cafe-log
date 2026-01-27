@@ -18,7 +18,7 @@
       }
     }
     *{box-sizing:border-box}
-    body{margin:0;padding:3.5rem 1.25rem 3.5rem;font-family:"Satoshi","Inter",system-ui,sans-serif;background:linear-gradient(180deg,#faf6f1,var(--bg));color:var(--text)}
+    body{margin:0;padding:3.5rem 1.25rem;font-family:"Satoshi","Inter",system-ui,sans-serif;background:linear-gradient(180deg,#faf6f1,var(--bg));color:var(--text)}
     .container{max-width:860px;margin:0 auto}
     h1{text-align:center;margin-bottom:.4rem}
     .subtitle{text-align:center;color:var(--muted);margin-bottom:2rem}
@@ -26,26 +26,47 @@
     label{display:block;margin-top:1rem}
     select,input{width:100%;margin-top:.5rem;padding:.75rem;border-radius:14px;border:1px solid #e6dacf}
     button{width:100%;margin-top:1.25rem;padding:.85rem;border-radius:999px;border:none;background:var(--primary);color:#fff;font-weight:600;cursor:pointer}
-    button.secondary{background:var(--secondary);color:var(--text)}
     .hidden{display:none}
-    .stats-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:.75rem;margin-top:1rem}
-    .stat{background:#f6ede4;border-radius:14px;padding:.85rem;text-align:center}
-    .stat-label{margin-left:.25rem;color:var(--muted)}
     .tabs{display:flex;gap:.5rem;margin-bottom:1.75rem}
     .tab{padding:.6rem 1.25rem;border-radius:999px;border:none;background:var(--secondary);cursor:pointer}
     .tab.active{background:var(--primary);color:#fff}
-    canvas{max-width:100%; margin-top:1.25rem; margin-bottom:1.25rem;}
-    .bottom-metrics{margin-top:1rem;display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:.75rem; padding-top:1rem; padding-bottom:1rem;}
+
+    .stats-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:.75rem;margin-top:1rem}
+    .stat{background:#f6ede4;border-radius:14px;padding:.85rem;text-align:center}
+    .stat-label{margin-left:.25rem;color:var(--muted)}
+    canvas{display:block;margin:1.25rem auto;max-width:100%;position:relative;}
+    .bottom-metrics{margin-top:1rem;display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:.75rem;padding-top:1rem;padding-bottom:1rem}
+
+    .history-row{display:grid;grid-template-columns:1fr 1fr 1fr 1fr 1fr auto;gap:.5rem;align-items:center;margin-bottom:.5rem}
+    .history-row select,input{width:100%;padding:.5rem;border-radius:12px;border:1px solid #e6dacf}
+    .history-row button{width:auto;padding:.5rem 1rem;border-radius:999px;background:#d9534f;color:#fff;border:none;cursor:pointer}
+
+    .tooltip {
+      position: absolute;
+      background: rgba(0,0,0,0.7);
+      color: #fff;
+      border-radius: 8px;
+      padding: 6px 12px;
+      font-size: 13px;
+      pointer-events: none;
+      white-space: nowrap;
+      display: none;
+      z-index: 10;
+      transform: translate(-50%, -100%);
+      text-align: center;
+    }
   </style>
 </head>
 <body>
   <h1>☕🧋🍵 Drink Logger</h1>
   <p class="subtitle">by Shannon</p>
 
-  <nav class="container"><div class="tabs">
-    <button class="tab active" data-tab="main">Logger</button>
-    <button class="tab" data-tab="history">History</button>
-  </div></nav>
+  <nav class="container">
+    <div class="tabs">
+      <button class="tab active" data-tab="main">Logger</button>
+      <button class="tab" data-tab="history">History</button>
+    </div>
+  </nav>
 
   <section id="mainTab" class="container">
     <div class="card">
@@ -87,17 +108,29 @@
         <div class="stat"><strong id="monthCount">0</strong><span class="stat-label"> This month</span></div>
       </div>
     </div>
+
+    <div class="card">
+      <button id="exportDataCSV" style="background:#c08a5a">Export to CSV</button>
+      <button id="exportDataJSON" style="background:#8b5e3c;margin-top:.5rem">Export to JSON</button>
+    </div>
   </section>
 
   <section id="historyTab" class="container hidden">
-    <div class="card"><h2>📜 History</h2><div id="history"></div></div>
+    <div class="card">
+      <h2>📜 History</h2>
+      <div id="history"></div>
+      <p style="color:var(--muted);font-size:.85rem;margin-top:1rem">Click any row to edit. Changes save instantly. You can also edit the price per submission here.</p>
+    </div>
   </section>
+
+  <div id="tooltip" class="tooltip"></div>
 
 <script>
 const $=id=>document.getElementById(id);
 const getLogs=()=>JSON.parse(localStorage.getItem('drinkLogs')||'[]');
 const saveLogs=l=>localStorage.setItem('drinkLogs',JSON.stringify(l));
 
+// Tabs
 document.querySelectorAll('.tab').forEach(btn=>{
   btn.onclick=()=>{
     document.querySelectorAll('.tab').forEach(b=>b.classList.remove('active'));
@@ -107,11 +140,10 @@ document.querySelectorAll('.tab').forEach(btn=>{
   };
 });
 
+// Show/hide fields
 $('drinkType').onchange=()=>{
   const t=$('drinkType').value;
-  $('storeField').classList.toggle('hidden',!t);
-  $('priceField').classList.toggle('hidden',!t);
-  $('qtyField').classList.toggle('hidden',!t);
+  ['storeField','priceField','qtyField'].forEach(id=>$(id).classList.toggle('hidden',!t));
   $('paidField').classList.toggle('hidden',!(t==='coffee'||t==='matcha'));
 };
 
@@ -119,53 +151,171 @@ $('save').onclick=()=>{
   const t=$('drinkType').value, store=$('store').value.trim();
   const paid=$('paid').value, price=parseFloat($('price').value||0);
   const qty=parseInt($('qty').value||1);
-  if(!t||!store||((t==='coffee'||t==='matcha')&&!paid)){
-    alert('Please complete all required fields'); return;
-  }
+  if(!t||!store||((t==='coffee'||t==='matcha')&&!paid)){ alert('Please complete all required fields'); return; }
   const logs=getLogs();
   for(let i=0;i<qty;i++) logs.push({drinkType:t,store,paid:((t==='coffee'||t==='matcha')?paid:null),price,date:new Date().toISOString()});
   saveLogs(logs);
-  $('store').value=$('price').value=''; $('qty').value=1; $('paid').value=''; $('drinkType').value='';
+  ['store','price','qty','paid','drinkType'].forEach(id=>$(id).value=id==='qty'?1:'');
   ['storeField','priceField','qtyField','paidField'].forEach(id=>$(id).classList.add('hidden'));
-  render();
+  renderLogs();
+  renderChart();
 };
 
-function render(){
+// Export CSV
+$('exportDataCSV').onclick=()=>{
+  const logs=getLogs();
+  if(!logs.length){alert('No data to export'); return;}
+  let csv='Drink,Store,Paid,Price,Date\n';
+  logs.forEach(l=>{csv+=`"${l.drinkType}","${l.store}","${l.paid||''}",${l.price},"${l.date}"\n`});
+  const blob=new Blob([csv],{type:'text/csv'});
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(blob);
+  a.download='drink_logs.csv';
+  a.click();
+};
+
+// Export JSON
+$('exportDataJSON').onclick=()=>{
+  const logs=getLogs();
+  if(!logs.length){alert('No data to export'); return;}
+  const blob=new Blob([JSON.stringify(logs,null,2)],{type:'application/json'});
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(blob);
+  a.download='drink_logs.json';
+  a.click();
+};
+
+function renderLogs(){
   const logs=getLogs();
   $('history').innerHTML='';
   logs.forEach((l,i)=>{
     const row=document.createElement('div');
-    row.innerHTML=`${l.drinkType} – ${l.store} ($${l.price}) <button data-i="${i}">✕</button>`;
-    row.querySelector('button').onclick=()=>{logs.splice(i,1);saveLogs(logs);render();};
+    row.className='history-row';
+    row.innerHTML=`
+      <input value="${l.drinkType}" disabled />
+      <input value="${l.store}" />
+      <input value="${l.paid||''}" />
+      <input type='number' value='${l.price}' step='0.01' />
+      <input type='number' value='1' />
+      <button data-i='${i}'>Delete</button>
+    `;
+    row.querySelector('button').onclick=()=>{
+      if(confirm('Are you sure you want to delete this entry?')){
+        logs.splice(i,1);saveLogs(logs);renderLogs(); renderChart();
+      }
+    };
     $('history').appendChild(row);
   });
-  $('total').textContent=logs.length;
-  const c=logs.filter(l=>l.drinkType==='coffee').length;
-  const b=logs.filter(l=>l.drinkType==='boba').length;
-  const m=logs.filter(l=>l.drinkType==='matcha').length;
-  $('coffeeCount').textContent=c; $('bobaCount').textContent=b; $('matchaCount').textContent=m;
+  updateStats();
+}
 
+function updateStats(){
+  const logs=getLogs();
+  $('total').textContent=logs.length;
+  $('coffeeCount').textContent=logs.filter(l=>l.drinkType==='coffee').length;
+  $('bobaCount').textContent=logs.filter(l=>l.drinkType==='boba').length;
+  $('matchaCount').textContent=logs.filter(l=>l.drinkType==='matcha').length;
   const spend=logs.reduce((s,l)=>s+(l.price||0),0);
   $('totalSpend').textContent=`$${spend.toFixed(2)}`;
-
   const now=new Date();
   const startOfWeek=new Date(now); startOfWeek.setDate(now.getDate()-now.getDay()); startOfWeek.setHours(0,0,0,0);
   const startOfMonth=new Date(now.getFullYear(),now.getMonth(),1);
   $('weekCount').textContent=logs.filter(l=>new Date(l.date)>=startOfWeek).length;
   $('monthCount').textContent=logs.filter(l=>new Date(l.date)>=startOfMonth).length;
-
-  drawPie(c,b,m);
 }
 
-function drawPie(c,b,m){
-  const ctx=$('pie').getContext('2d'); ctx.clearRect(0,0,300,300);
-  const data=[[c,'#8b5e3c'],[b,'#cbb69a'],[m,'#9db18c']].filter(d=>d[0]>0);
-  const total=data.reduce((s,d)=>s+d[0],0); if(!total) return;
-  let a=-.5*Math.PI; const cx=150,cy=130,r=110;
-  data.forEach(d=>{const ang=d[0]/total*2*Math.PI;ctx.beginPath();ctx.moveTo(cx,cy);ctx.arc(cx,cy,r,a,a+ang);ctx.closePath();ctx.fillStyle=d[1];ctx.fill();a+=ang;});
+function renderChart(){
+  const logs=getLogs();
+  const canvas=$('pie');
+  const ctx=canvas.getContext('2d');
+
+  const width=canvas.width=300;
+  const height=canvas.height=260;
+  ctx.clearRect(0,0,width,height);
+
+  const c=logs.filter(l=>l.drinkType==='coffee').length;
+  const b=logs.filter(l=>l.drinkType==='boba').length;
+  const m=logs.filter(l=>l.drinkType==='matcha').length;
+
+  const data=[
+    [c,'#8b5e3c','Coffee'],
+    [b,'#cbb69a','Boba'],
+    [m,'#9db18c','Matcha']
+  ].filter(d=>d[0]>0);
+
+  const total=data.reduce((s,d)=>s+d[0],0);
+  if(!total) return;
+
+  const cx=width/2;
+  const cy=height/2;
+  const r=110;
+
+  // ORIGINAL AXIS: start at top
+  let startAngle=-Math.PI/2;
+
+  const slices=[];
+
+  data.forEach(d=>{
+    const sliceAngle=(d[0]/total)*2*Math.PI;
+    const endAngle=startAngle+sliceAngle;
+
+    ctx.beginPath();
+    ctx.moveTo(cx,cy);
+    ctx.arc(cx,cy,r,startAngle,endAngle);
+    ctx.closePath();
+    ctx.fillStyle=d[1];
+    ctx.fill();
+
+    slices.push({start:startAngle,end:endAngle,data:d});
+    startAngle=endAngle;
+  });
+
+  const tooltip=$('tooltip');
+
+  canvas.onmousemove=(e)=>{
+    const rect=canvas.getBoundingClientRect();
+    const x=e.clientX-rect.left-cx;
+    const y=e.clientY-rect.top-cy;
+    const dist=Math.sqrt(x*x+y*y);
+    let angle=Math.atan2(y,x);
+
+    // normalize to match axis
+    if(angle< -Math.PI/2) angle+=2*Math.PI;
+
+    let hit=null;
+    if(dist<=r){
+      slices.forEach(s=>{
+        if(angle>=s.start && angle<=s.end){ hit=s; }
+      });
+    }
+
+    ctx.clearRect(0,0,width,height);
+
+    slices.forEach(s=>{
+      ctx.beginPath();
+      ctx.moveTo(cx,cy);
+      ctx.arc(cx,cy,r,s.start,s.end);
+      ctx.closePath();
+      ctx.fillStyle=s.data[1];
+      ctx.fill();
+    });
+
+    if(hit){
+      tooltip.style.display='block';
+      tooltip.style.left=(e.clientX+12)+'px';
+      tooltip.style.top=(e.clientY-12)+'px';
+      const pct=((hit.data[0]/total)*100).toFixed(1);
+      tooltip.textContent=`${hit.data[2]}: ${hit.data[0]} (${pct}%)`;
+    } else {
+      tooltip.style.display='none';
+    }
+  };
+
+  canvas.onmouseleave=()=>tooltip.style.display='none';
 }
 
-render();
+renderLogs();
+renderChart();
 </script>
 </body>
 </html>
