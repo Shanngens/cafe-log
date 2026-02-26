@@ -3,319 +3,840 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Coffee, Boba & Matcha Logger</title>
+  <title>Shannon's Drink Log</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
   <style>
     :root {
-      --bg:#f3ede7; --card:#fffaf5; --primary:#8b5e3c; --secondary:#efe6dc;
-      --text:#3b2f2a; --muted:#8a7e74; --radius:16px;
-      --shadow:0 12px 30px rgba(60,40,20,0.08);
-      --coffee:#8b5e3c; --boba:#cbb69a; --matcha:#9db18c;
+      --ink: #1a1108;
+      --cream: #f7f2ea;
+      --parchment: #ede5d8;
+      --warm-mid: #d4c5b0;
+      --coffee: #6b3f1f;
+      --coffee-light: #9e6040;
+      --boba: #c4956a;
+      --matcha: #7a9e6e;
+      --gold: #b8882a;
+      --muted: #8a7560;
+      --card-bg: #fdf8f2;
+      --border: rgba(107,63,31,0.15);
+      --danger: #9e3c2a;
     }
-    @media (prefers-color-scheme: dark) {
-      :root {
-        --bg:#1c1815; --card:#26211d; --primary:#c08a5a; --secondary:#332c26;
-        --text:#f3ede7; --muted:#b7a99c; --shadow:0 14px 34px rgba(0,0,0,0.45);
-      }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background-color: var(--cream);
+      background-image:
+        radial-gradient(ellipse at 20% 10%, rgba(180,140,80,0.08) 0%, transparent 60%),
+        radial-gradient(ellipse at 80% 90%, rgba(107,63,31,0.06) 0%, transparent 60%);
+      color: var(--ink);
+      font-family: 'DM Sans', sans-serif;
+      min-height: 100vh;
+      padding: 0 0 80px;
     }
-    *{box-sizing:border-box}
-    body{margin:0;padding:3.5rem 1.25rem;font-family:"Satoshi","Inter",system-ui,sans-serif;background:linear-gradient(180deg,#faf6f1,var(--bg));color:var(--text)}
-    .container{max-width:860px;margin:0 auto}
-    h1{text-align:center;margin-bottom:.4rem}
-    .subtitle{text-align:center;color:var(--muted);margin-bottom:2rem}
-    .card{background:var(--card);border-radius:var(--radius);padding:2rem;box-shadow:var(--shadow);margin-bottom:2rem}
-    label{display:block;margin-top:1rem}
-    select,input{width:100%;margin-top:.5rem;padding:.75rem;border-radius:14px;border:1px solid #e6dacf}
-    button{width:100%;margin-top:1.25rem;padding:.85rem;border-radius:999px;border:none;background:var(--primary);color:#fff;font-weight:600;cursor:pointer}
-    .hidden{display:none}
-    .tabs{display:flex;gap:.5rem;margin-bottom:1.75rem}
-    .tab{padding:.6rem 1.25rem;border-radius:999px;border:none;background:var(--secondary);cursor:pointer}
-    .tab.active{background:var(--primary);color:#fff}
 
-    .stats-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:.75rem;margin-top:1rem}
-    .stat{background:#f6ede4;border-radius:14px;padding:.85rem;text-align:center}
-    .stat-label{margin-left:.25rem;color:var(--muted)}
-    canvas{display:block;margin:1.25rem auto;max-width:100%;position:relative;}
-    .bottom-metrics{margin-top:1rem;display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:.75rem;padding-top:1rem;padding-bottom:1rem}
+    /* LOADING */
+    #loading-screen {
+      min-height: 100vh;
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center; gap: 16px;
+    }
+    .loader {
+      width: 36px; height: 36px;
+      border: 2.5px solid var(--parchment);
+      border-top-color: var(--coffee);
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .loader-text { font-size: 13px; color: var(--muted); letter-spacing: 0.08em; }
 
-    .history-row{display:grid;grid-template-columns:1fr 1fr 1fr 1fr 1fr auto;gap:.5rem;align-items:center;margin-bottom:.5rem}
-    .history-row select,input{width:100%;padding:.5rem;border-radius:12px;border:1px solid #e6dacf}
-    .history-row button{width:auto;padding:.5rem 1rem;border-radius:999px;background:#d9534f;color:#fff;border:none;cursor:pointer}
+    /* AUTH */
+    #auth-screen {
+      min-height: 100vh;
+      display: none; flex-direction: column;
+      align-items: center; justify-content: center;
+      padding: 40px 24px; text-align: center;
+    }
+    .auth-card {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 24px;
+      padding: 48px 40px;
+      max-width: 400px; width: 100%;
+      box-shadow: 0 8px 40px rgba(107,63,31,0.1);
+      animation: fadeUp 0.5s ease both;
+    }
+    .auth-eyebrow {
+      font-size: 11px; font-weight: 500;
+      letter-spacing: 0.2em; text-transform: uppercase;
+      color: var(--gold); margin-bottom: 12px;
+    }
+    .auth-title {
+      font-family: 'Playfair Display', serif;
+      font-size: 2.2rem; font-weight: 700;
+      color: var(--coffee); line-height: 1.1; margin-bottom: 6px;
+    }
+    .auth-title em { font-style: italic; font-weight: 400; color: var(--ink); }
+    .auth-divider {
+      width: 40px; height: 1.5px;
+      background: var(--gold); margin: 20px auto 28px;
+    }
+    .google-btn {
+      display: flex; align-items: center; justify-content: center; gap: 12px;
+      width: 100%; padding: 14px 20px;
+      background: var(--coffee); color: var(--cream);
+      border: none; border-radius: 14px;
+      font-family: 'DM Sans', sans-serif; font-size: 15px; font-weight: 500;
+      cursor: pointer; transition: all 0.2s ease; letter-spacing: 0.02em;
+    }
+    .google-btn:hover {
+      background: var(--coffee-light); transform: translateY(-1px);
+      box-shadow: 0 6px 20px rgba(107,63,31,0.3);
+    }
+    .auth-note {
+      margin-top: 18px; font-size: 12px; color: var(--muted); line-height: 1.6;
+    }
 
-    .tooltip {
-      position: absolute;
-      background: rgba(0,0,0,0.7);
-      color: #fff;
-      border-radius: 8px;
-      padding: 6px 12px;
-      font-size: 13px;
-      pointer-events: none;
-      white-space: nowrap;
-      display: none;
-      z-index: 10;
-      transform: translate(-50%, -100%);
-      text-align: center;
+    /* APP */
+    #app-screen { display: none; }
+
+    header {
+      padding: 44px 24px 28px; text-align: center; position: relative;
+    }
+    header::after {
+      content: ''; display: block;
+      width: 60px; height: 1.5px;
+      background: var(--gold); margin: 18px auto 0;
+    }
+    .eyebrow {
+      font-size: 11px; font-weight: 500;
+      letter-spacing: 0.2em; text-transform: uppercase;
+      color: var(--gold); margin-bottom: 8px;
+    }
+    h1 {
+      font-family: 'Playfair Display', serif;
+      font-size: clamp(2rem, 6vw, 3rem); font-weight: 700;
+      line-height: 1.1; color: var(--coffee);
+    }
+    h1 em { font-style: italic; font-weight: 400; color: var(--ink); }
+
+    .user-bar {
+      display: flex; align-items: center; justify-content: center;
+      gap: 10px; margin-top: 12px; flex-wrap: wrap;
+    }
+    .user-avatar {
+      width: 28px; height: 28px; border-radius: 50%;
+      border: 1.5px solid var(--border); object-fit: cover;
+    }
+    .user-name { font-size: 13px; color: var(--muted); }
+    .sync-dot {
+      display: inline-block; width: 7px; height: 7px;
+      border-radius: 50%; background: var(--matcha);
+    }
+    .sync-dot.syncing { animation: pulse 1s infinite; background: var(--gold); }
+    @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.3} }
+    .sign-out-btn {
+      font-size: 11px; color: var(--muted);
+      background: none; border: 1px solid var(--border);
+      border-radius: 999px; padding: 3px 10px;
+      cursor: pointer; font-family: 'DM Sans', sans-serif; transition: all 0.15s;
+    }
+    .sign-out-btn:hover { border-color: var(--coffee-light); color: var(--coffee); }
+
+    .tab-bar {
+      display: flex; justify-content: center; gap: 0;
+      margin: 20px auto 0; max-width: 340px;
+      background: var(--parchment); border-radius: 999px;
+      padding: 4px; border: 1px solid var(--border);
+    }
+    .tab-btn {
+      flex: 1; padding: 9px 0;
+      border: none; background: transparent; border-radius: 999px;
+      font-family: 'DM Sans', sans-serif; font-size: 13px; font-weight: 500;
+      color: var(--muted); cursor: pointer; transition: all 0.25s ease;
+    }
+    .tab-btn.active {
+      background: var(--coffee); color: var(--cream);
+      box-shadow: 0 2px 10px rgba(107,63,31,0.3);
+    }
+
+    .container { max-width: 680px; margin: 0 auto; padding: 0 20px; }
+
+    .card {
+      background: var(--card-bg); border-radius: 20px; padding: 28px;
+      margin-bottom: 20px; border: 1px solid var(--border);
+      box-shadow: 0 4px 24px rgba(107,63,31,0.07), 0 1px 3px rgba(107,63,31,0.06);
+      animation: fadeUp 0.4s ease both;
+    }
+    .card:nth-child(2) { animation-delay: 0.07s; }
+    .card:nth-child(3) { animation-delay: 0.14s; }
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(14px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    .card-title {
+      font-family: 'Playfair Display', serif;
+      font-size: 1.1rem; font-weight: 700; color: var(--coffee);
+      margin-bottom: 18px; display: flex; align-items: center; gap: 8px;
+    }
+
+    .field { margin-bottom: 16px; }
+    .field label {
+      display: block; font-size: 11px; font-weight: 500;
+      letter-spacing: 0.12em; text-transform: uppercase;
+      color: var(--muted); margin-bottom: 7px;
+    }
+    .field select, .field input {
+      width: 100%; padding: 12px 16px;
+      background: var(--parchment); border: 1px solid var(--border);
+      border-radius: 12px; font-family: 'DM Sans', sans-serif;
+      font-size: 15px; color: var(--ink); outline: none;
+      transition: border-color 0.2s, box-shadow 0.2s; -webkit-appearance: none;
+    }
+    .field select:focus, .field input:focus {
+      border-color: var(--coffee-light);
+      box-shadow: 0 0 0 3px rgba(158,96,64,0.12);
+    }
+
+    .drink-chips { display: flex; gap: 10px; flex-wrap: wrap; }
+    .drink-chip {
+      flex: 1; min-width: 90px; padding: 14px 10px;
+      background: var(--parchment); border: 1.5px solid var(--border);
+      border-radius: 14px; cursor: pointer; text-align: center;
+      transition: all 0.2s ease; font-family: 'DM Sans', sans-serif;
+      font-size: 13px; font-weight: 500; color: var(--muted);
+    }
+    .drink-chip .chip-icon { display: block; font-size: 22px; margin-bottom: 5px; }
+    .drink-chip:hover { border-color: var(--warm-mid); background: #f3ece0; }
+    .drink-chip.selected-coffee { background: #f5ede5; border-color: var(--coffee); color: var(--coffee); }
+    .drink-chip.selected-boba   { background: #f8f0e8; border-color: var(--boba); color: #8a5c35; }
+    .drink-chip.selected-matcha { background: #edf3eb; border-color: var(--matcha); color: #4d7040; }
+
+    .hidden { display: none !important; }
+    .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+
+    .log-btn {
+      width: 100%; padding: 15px 24px;
+      background: var(--coffee); color: var(--cream);
+      border: none; border-radius: 14px;
+      font-family: 'Playfair Display', serif; font-size: 16px; font-style: italic;
+      cursor: pointer; transition: all 0.2s ease; margin-top: 8px;
+    }
+    .log-btn:hover:not(:disabled) {
+      background: var(--coffee-light); transform: translateY(-1px);
+      box-shadow: 0 6px 20px rgba(107,63,31,0.3);
+    }
+    .log-btn:disabled { opacity: 0.6; cursor: not-allowed; }
+
+    .stats-row {
+      display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: 24px;
+    }
+    .stat-box {
+      background: var(--parchment); border-radius: 14px; padding: 14px 10px;
+      text-align: center; border: 1px solid var(--border);
+    }
+    .stat-box .stat-num {
+      display: block; font-family: 'Playfair Display', serif;
+      font-size: 1.6rem; font-weight: 700; color: var(--coffee); line-height: 1;
+    }
+    .stat-box .stat-lbl {
+      display: block; font-size: 10px; font-weight: 500;
+      letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); margin-top: 5px;
+    }
+    .stat-box.boba .stat-num   { color: var(--boba); }
+    .stat-box.matcha .stat-num { color: var(--matcha); }
+
+    .chart-wrap {
+      position: relative; display: flex;
+      justify-content: center; align-items: center; margin: 0 auto 20px;
+    }
+    #pie { display: block; cursor: crosshair; }
+    .pie-center { position: absolute; text-align: center; pointer-events: none; }
+    .pie-center-num {
+      font-family: 'Playfair Display', serif;
+      font-size: 2rem; font-weight: 700; color: var(--coffee); line-height: 1;
+    }
+    .pie-center-lbl {
+      font-size: 10px; letter-spacing: 0.12em;
+      text-transform: uppercase; color: var(--muted); margin-top: 4px;
+    }
+    .legend { display: flex; justify-content: center; gap: 20px; flex-wrap: wrap; }
+    .legend-item { display: flex; align-items: center; gap: 7px; font-size: 13px; color: var(--muted); }
+    .legend-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+    .bottom-stats { display: grid; grid-template-columns: repeat(3,1fr); gap: 10px; margin-top: 20px; }
+
+    #tooltip {
+      position: fixed; background: var(--ink); color: var(--cream);
+      border-radius: 8px; padding: 7px 13px; font-size: 13px;
+      pointer-events: none; white-space: nowrap; display: none;
+      z-index: 100; font-family: 'DM Sans', sans-serif;
+    }
+
+    .history-entry {
+      display: grid; grid-template-columns: 28px 1fr 80px 80px auto;
+      gap: 8px; align-items: center; padding: 12px 16px;
+      background: var(--parchment); border-radius: 12px; margin-bottom: 8px;
+      border: 1px solid var(--border); transition: box-shadow 0.15s;
+      animation: fadeUp 0.3s ease both;
+    }
+    .history-entry:hover { box-shadow: 0 3px 14px rgba(107,63,31,0.1); }
+    .entry-icon { font-size: 18px; text-align: center; }
+    .entry-store { font-size: 14px; font-weight: 500; color: var(--ink); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .entry-date { font-size: 11px; color: var(--muted); margin-top: 2px; }
+    .entry-price { font-family: 'Playfair Display', serif; font-size: 15px; font-weight: 700; color: var(--coffee); text-align: right; }
+    .entry-paid { font-size: 11px; text-align: center; padding: 4px 8px; border-radius: 999px; font-weight: 500; }
+    .entry-paid.yes { background: #e8f0e6; color: #4d7040; }
+    .entry-paid.no  { background: #faeae6; color: var(--danger); }
+    .entry-paid.na  { background: var(--parchment); color: var(--muted); }
+    .delete-btn {
+      width: 28px; height: 28px; border: none; background: transparent;
+      border-radius: 50%; cursor: pointer; color: var(--muted); font-size: 16px;
+      display: flex; align-items: center; justify-content: center; transition: all 0.15s;
+    }
+    .delete-btn:hover { background: #fae0dc; color: var(--danger); }
+
+    .empty-state {
+      text-align: center; padding: 40px 20px; color: var(--muted);
+      font-family: 'Playfair Display', serif; font-style: italic; font-size: 1.1rem;
+    }
+
+    .export-row { display: flex; gap: 10px; }
+    .export-btn {
+      flex: 1; padding: 12px;
+      border: 1.5px solid var(--border); border-radius: 12px;
+      background: transparent; font-family: 'DM Sans', sans-serif;
+      font-size: 13px; font-weight: 500; color: var(--coffee);
+      cursor: pointer; transition: all 0.2s; letter-spacing: 0.04em;
+    }
+    .export-btn:hover { background: var(--parchment); border-color: var(--coffee); }
+
+    /* Migration banner */
+    .migration-banner {
+      background: #f5ede5; border: 1px solid rgba(107,63,31,0.2);
+      border-radius: 14px; padding: 16px 20px; margin-bottom: 20px;
+      display: flex; align-items: center; justify-content: space-between;
+      gap: 12px; flex-wrap: wrap; animation: fadeUp 0.4s ease both;
+    }
+    .migration-text { font-size: 14px; color: var(--coffee); }
+    .migration-text strong { font-weight: 600; }
+    .migrate-btn {
+      padding: 9px 18px; background: var(--coffee); color: var(--cream);
+      border: none; border-radius: 999px; font-family: 'DM Sans', sans-serif;
+      font-size: 13px; font-weight: 500; cursor: pointer; white-space: nowrap; transition: all 0.2s;
+    }
+    .migrate-btn:hover { background: var(--coffee-light); }
+    .dismiss-mig {
+      background: none; border: none; color: var(--muted);
+      font-size: 18px; cursor: pointer; padding: 0 4px; line-height: 1;
+    }
+
+    .toast {
+      position: fixed; bottom: 32px; left: 50%;
+      transform: translateX(-50%) translateY(80px);
+      background: var(--coffee); color: var(--cream);
+      padding: 13px 24px; border-radius: 999px;
+      font-size: 14px; font-weight: 500;
+      box-shadow: 0 8px 28px rgba(107,63,31,0.35);
+      transition: transform 0.35s cubic-bezier(.34,1.56,.64,1);
+      z-index: 1000; pointer-events: none; white-space: nowrap;
+    }
+    .toast.show { transform: translateX(-50%) translateY(0); }
+
+    @media (max-width: 520px) {
+      .stats-row { grid-template-columns: repeat(2,1fr); }
+      .form-row { grid-template-columns: 1fr; }
+      .history-entry { grid-template-columns: 24px 1fr 64px 64px auto; }
+      .auth-card { padding: 36px 24px; }
     }
   </style>
 </head>
 <body>
-  <h1>☕🧋🍵 Drink Logger</h1>
-  <p class="subtitle">by Shannon</p>
 
-  <nav class="container">
-    <div class="tabs">
-      <button class="tab active" data-tab="main">Logger</button>
-      <button class="tab" data-tab="history">History</button>
+<div id="loading-screen">
+  <div class="loader"></div>
+  <div class="loader-text">Loading…</div>
+</div>
+
+<div id="auth-screen">
+  <div class="auth-card">
+    <div class="auth-eyebrow">Your personal drink diary</div>
+    <div class="auth-title">Shannon's <em>Drink</em> Log</div>
+    <p style="color:var(--muted);font-size:14px;font-weight:300;">Coffee · Boba · Matcha</p>
+    <div class="auth-divider"></div>
+    <button class="google-btn" id="google-signin">
+      <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+        <path d="M17.64 9.2c0-.74-.07-1.28-.2-1.84H9v3.34h4.96c-.1.83-.64 2.08-1.84 2.92l2.84 2.2C16.66 14.08 17.64 11.77 17.64 9.2z" fill="rgba(255,255,255,0.9)"/>
+        <path d="M9 18c2.43 0 4.47-.8 5.96-2.18l-2.84-2.2c-.76.53-1.78.9-3.12.9-2.38 0-4.4-1.57-5.12-3.74L.87 13.04C2.35 15.98 5.48 18 9 18z" fill="rgba(255,255,255,0.9)"/>
+        <path d="M3.88 10.78A5.54 5.54 0 0 1 3.58 9c0-.62.11-1.22.29-1.78L.96 4.96A9.008 9.008 0 0 0 0 9c0 1.45.35 2.82.96 4.04l2.92-2.26z" fill="rgba(255,255,255,0.9)"/>
+        <path d="M9 3.48c1.69 0 2.83.73 3.48 1.34l2.54-2.48C13.46.89 11.43 0 9 0 5.48 0 2.44 2.02.96 4.96l2.91 2.26C4.6 5.05 6.62 3.48 9 3.48z" fill="rgba(255,255,255,0.9)"/>
+      </svg>
+      Continue with Google
+    </button>
+    <p class="auth-note">Your drinks sync to the cloud via Google. Any data saved locally will be imported automatically on sign-in.</p>
+  </div>
+</div>
+
+<div id="app-screen">
+  <header>
+    <p class="eyebrow">Keeping tabs since day one</p>
+    <h1>Shannon's <em>Drink</em> Log</h1>
+    <div class="user-bar">
+      <span id="user-avatar-wrap"></span>
+      <span class="user-name" id="user-name-el"></span>
+      <span class="sync-dot" id="sync-dot" title="Synced"></span>
+      <button class="sign-out-btn" id="sign-out">Sign out</button>
     </div>
-  </nav>
+    <div class="tab-bar">
+      <button class="tab-btn active" data-tab="logger">Logger</button>
+      <button class="tab-btn" data-tab="stats">Stats</button>
+      <button class="tab-btn" data-tab="history">History</button>
+    </div>
+  </header>
 
-  <section id="mainTab" class="container">
-    <div class="card">
-      <label>What did you drink?
-        <select id="drinkType">
-          <option value="">Select one</option>
-          <option value="coffee">☕ Coffee</option>
-          <option value="boba">🧋 Boba</option>
-          <option value="matcha">🍵 Matcha</option>
-        </select>
-      </label>
-      <label id="storeField" class="hidden">Where did you get it?
-        <input id="store" />
-      </label>
-      <label id="paidField" class="hidden">Did you pay?
-        <select id="paid"><option value="">Select</option><option>yes</option><option>no</option></select>
-      </label>
-      <label id="priceField" class="hidden">Price
-        <input id="price" type="number" step="0.01" />
-      </label>
-      <label id="qtyField" class="hidden">Quantity
-        <input id="qty" type="number" min="1" value="1" />
-      </label>
-      <button id="save">Log drink</button>
+  <main class="container">
+
+    <div id="migration-banner" class="migration-banner hidden">
+      <div class="migration-text">Found <strong id="migration-count">0 drinks</strong> in local storage — import to cloud?</div>
+      <button class="migrate-btn" id="do-migrate">Import now</button>
+      <button class="dismiss-mig" id="dismiss-migrate">×</button>
     </div>
 
-    <div class="card">
-      <h2>📊 Your year so far</h2>
-      <div class="stats-grid" id="topStats">
-        <div class="stat"><strong id="total">0</strong><span class="stat-label"> Total</span></div>
-        <div class="stat"><strong id="coffeeCount">0</strong><span class="stat-label"> Coffee</span></div>
-        <div class="stat"><strong id="bobaCount">0</strong><span class="stat-label"> Boba</span></div>
-        <div class="stat"><strong id="matchaCount">0</strong><span class="stat-label"> Matcha</span></div>
+    <!-- LOGGER -->
+    <div id="tab-logger">
+      <div class="card">
+        <div class="card-title">✦ What did you drink?</div>
+        <div class="drink-chips">
+          <div class="drink-chip" data-type="coffee"><span class="chip-icon">☕</span>Coffee</div>
+          <div class="drink-chip" data-type="boba"><span class="chip-icon">🧋</span>Boba</div>
+          <div class="drink-chip" data-type="matcha"><span class="chip-icon">🍵</span>Matcha</div>
+        </div>
+        <div id="extra-fields" class="hidden" style="margin-top:18px">
+          <div class="field">
+            <label>Where from?</label>
+            <input id="store" type="text" placeholder="Café name or spot…" />
+          </div>
+          <div class="form-row">
+            <div class="field" id="paid-field">
+              <label>Did you pay?</label>
+              <select id="paid">
+                <option value="">Select…</option>
+                <option value="yes">Yes</option>
+                <option value="no">No (treat!)</option>
+              </select>
+            </div>
+            <div class="field">
+              <label>Price ($)</label>
+              <input id="price" type="number" step="0.01" min="0" placeholder="0.00" />
+            </div>
+            <div class="field">
+              <label>Quantity</label>
+              <input id="qty" type="number" min="1" value="1" />
+            </div>
+          </div>
+          <button class="log-btn" id="save">Log this drink →</button>
+        </div>
       </div>
-      <canvas id="pie" height="260"></canvas>
-      <div class="bottom-metrics">
-        <div class="stat"><strong id="totalSpend">$0.00</strong><span class="stat-label"> Spent</span></div>
-        <div class="stat"><strong id="weekCount">0</strong><span class="stat-label"> This week</span></div>
-        <div class="stat"><strong id="monthCount">0</strong><span class="stat-label"> This month</span></div>
+    </div>
+
+    <!-- STATS -->
+    <div id="tab-stats" class="hidden">
+      <div class="card">
+        <div class="card-title">◈ Year so far</div>
+        <div class="stats-row">
+          <div class="stat-box"><span class="stat-num" id="s-total">0</span><span class="stat-lbl">Total</span></div>
+          <div class="stat-box"><span class="stat-num" id="s-coffee">0</span><span class="stat-lbl">Coffee</span></div>
+          <div class="stat-box boba"><span class="stat-num" id="s-boba">0</span><span class="stat-lbl">Boba</span></div>
+          <div class="stat-box matcha"><span class="stat-num" id="s-matcha">0</span><span class="stat-lbl">Matcha</span></div>
+        </div>
+        <div class="chart-wrap">
+          <canvas id="pie" width="240" height="240"></canvas>
+          <div class="pie-center">
+            <div class="pie-center-num" id="pie-total">0</div>
+            <div class="pie-center-lbl">drinks</div>
+          </div>
+        </div>
+        <div class="legend" id="legend"></div>
+        <div class="bottom-stats">
+          <div class="stat-box"><span class="stat-num" id="s-spend">$0</span><span class="stat-lbl">Spent</span></div>
+          <div class="stat-box"><span class="stat-num" id="s-week">0</span><span class="stat-lbl">This week</span></div>
+          <div class="stat-box"><span class="stat-num" id="s-month">0</span><span class="stat-lbl">This month</span></div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-title">↓ Export</div>
+        <div class="export-row">
+          <button class="export-btn" id="exportCSV">Export CSV</button>
+          <button class="export-btn" id="exportJSON">Export JSON</button>
+        </div>
       </div>
     </div>
 
-    <div class="card">
-      <button id="exportDataCSV" style="background:#c08a5a">Export to CSV</button>
-      <button id="exportDataJSON" style="background:#8b5e3c;margin-top:.5rem">Export to JSON</button>
+    <!-- HISTORY -->
+    <div id="tab-history" class="hidden">
+      <div class="card">
+        <div class="card-title">◎ Drink history</div>
+        <div id="history-list"></div>
+      </div>
     </div>
-  </section>
 
-  <section id="historyTab" class="container hidden">
-    <div class="card">
-      <h2>📜 History</h2>
-      <div id="history"></div>
-      <p style="color:var(--muted);font-size:.85rem;margin-top:1rem">Click any row to edit. Changes save instantly. You can also edit the price per submission here.</p>
-    </div>
-  </section>
+  </main>
+</div>
 
-  <div id="tooltip" class="tooltip"></div>
+<div id="tooltip"></div>
+<div class="toast" id="toast"></div>
 
-<script>
-const $=id=>document.getElementById(id);
-const getLogs=()=>JSON.parse(localStorage.getItem('drinkLogs')||'[]');
-const saveLogs=l=>localStorage.setItem('drinkLogs',JSON.stringify(l));
+<script type="module">
+  import { initializeApp }
+    from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
+  import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged }
+    from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js';
+  import { getFirestore, collection, addDoc, getDocs, deleteDoc, doc, writeBatch, query, orderBy }
+    from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
 
-// Tabs
-document.querySelectorAll('.tab').forEach(btn=>{
-  btn.onclick=()=>{
-    document.querySelectorAll('.tab').forEach(b=>b.classList.remove('active'));
-    btn.classList.add('active');
-    $('mainTab').classList.toggle('hidden',btn.dataset.tab!=='main');
-    $('historyTab').classList.toggle('hidden',btn.dataset.tab!=='history');
+  const firebaseConfig = {
+    apiKey: "AIzaSyCK-nOkrr7j-kurDNvcVxTkL1DEL5XkSgs",
+    authDomain: "cafe-log.firebaseapp.com",
+    projectId: "cafe-log",
+    storageBucket: "cafe-log.firebasestorage.app",
+    messagingSenderId: "376928551156",
+    appId: "1:376928551156:web:f8af4b703601d1aee45ea1",
+    measurementId: "G-FKN3HSFVCJ"
   };
-});
 
-// Show/hide fields
-$('drinkType').onchange=()=>{
-  const t=$('drinkType').value;
-  ['storeField','priceField','qtyField'].forEach(id=>$(id).classList.toggle('hidden',!t));
-  $('paidField').classList.toggle('hidden',!(t==='coffee'||t==='matcha'));
-};
+  const fireapp = initializeApp(firebaseConfig);
+  const auth    = getAuth(fireapp);
+  const db      = getFirestore(fireapp);
 
-$('save').onclick=()=>{
-  const t=$('drinkType').value, store=$('store').value.trim();
-  const paid=$('paid').value, price=parseFloat($('price').value||0);
-  const qty=parseInt($('qty').value||1);
-  if(!t||!store||((t==='coffee'||t==='matcha')&&!paid)){ alert('Please complete all required fields'); return; }
-  const logs=getLogs();
-  for(let i=0;i<qty;i++) logs.push({drinkType:t,store,paid:((t==='coffee'||t==='matcha')?paid:null),price,date:new Date().toISOString()});
-  saveLogs(logs);
-  ['store','price','qty','paid','drinkType'].forEach(id=>$(id).value=id==='qty'?1:'');
-  ['storeField','priceField','qtyField','paidField'].forEach(id=>$(id).classList.add('hidden'));
-  renderLogs();
-  renderChart();
-};
+  const $  = id => document.getElementById(id);
+  const ICONS  = { coffee: '☕', boba: '🧋', matcha: '🍵' };
+  const COLORS = { coffee: '#6b3f1f', boba: '#c4956a', matcha: '#7a9e6e' };
 
-// Export CSV
-$('exportDataCSV').onclick=()=>{
-  const logs=getLogs();
-  if(!logs.length){alert('No data to export'); return;}
-  let csv='Drink,Store,Paid,Price,Date\n';
-  logs.forEach(l=>{csv+=`"${l.drinkType}","${l.store}","${l.paid||''}",${l.price},"${l.date}"\n`});
-  const blob=new Blob([csv],{type:'text/csv'});
-  const a=document.createElement('a');
-  a.href=URL.createObjectURL(blob);
-  a.download='drink_logs.csv';
-  a.click();
-};
+  let currentUser = null;
+  let allLogs     = [];
+  let selectedType = null;
 
-// Export JSON
-$('exportDataJSON').onclick=()=>{
-  const logs=getLogs();
-  if(!logs.length){alert('No data to export'); return;}
-  const blob=new Blob([JSON.stringify(logs,null,2)],{type:'application/json'});
-  const a=document.createElement('a');
-  a.href=URL.createObjectURL(blob);
-  a.download='drink_logs.json';
-  a.click();
-};
+  function userColl() {
+    return collection(db, 'users', currentUser.uid, 'drinks');
+  }
+  function setSyncing(v) { $('sync-dot').classList.toggle('syncing', v); }
 
-function renderLogs(){
-  const logs=getLogs();
-  $('history').innerHTML='';
-  logs.forEach((l,i)=>{
-    const row=document.createElement('div');
-    row.className='history-row';
-    row.innerHTML=`
-      <input value="${l.drinkType}" disabled />
-      <input value="${l.store}" />
-      <input value="${l.paid||''}" />
-      <input type='number' value='${l.price}' step='0.01' />
-      <input type='number' value='1' />
-      <button data-i='${i}'>Delete</button>
-    `;
-    row.querySelector('button').onclick=()=>{
-      if(confirm('Are you sure you want to delete this entry?')){
-        logs.splice(i,1);saveLogs(logs);renderLogs(); renderChart();
+  function showToast(msg) {
+    const t = $('toast');
+    t.textContent = msg;
+    t.classList.add('show');
+    setTimeout(() => t.classList.remove('show'), 2400);
+  }
+
+  /* ── AUTH ── */
+  onAuthStateChanged(auth, async user => {
+    $('loading-screen').style.display = 'none';
+    if (user) {
+      currentUser = user;
+      $('auth-screen').style.display  = 'none';
+      $('app-screen').style.display   = 'block';
+
+      $('user-name-el').textContent = user.displayName || user.email;
+      $('user-avatar-wrap').innerHTML = user.photoURL
+        ? `<img class="user-avatar" src="${user.photoURL}" referrerpolicy="no-referrer"/>`
+        : `<div style="width:28px;height:28px;border-radius:50%;background:var(--parchment);border:1.5px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:13px">👤</div>`;
+
+      await loadLogs();
+      checkLocalMigration();
+    } else {
+      currentUser = null;
+      allLogs     = [];
+      $('auth-screen').style.display = 'flex';
+      $('app-screen').style.display  = 'none';
+    }
+  });
+
+  $('google-signin').onclick = async () => {
+    try {
+      await signInWithPopup(auth, new GoogleAuthProvider());
+    } catch(e) {
+      showToast('Sign-in failed — please try again.');
+      console.error(e);
+    }
+  };
+
+  $('sign-out').onclick = () => signOut(auth);
+
+  /* ── FIRESTORE ── */
+  async function loadLogs() {
+    setSyncing(true);
+    try {
+      const snap = await getDocs(query(userColl(), orderBy('date', 'desc')));
+      allLogs = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+    } catch(e) {
+      showToast('Could not load data.');
+      console.error(e);
+    }
+    setSyncing(false);
+  }
+
+  /* ── LOCAL MIGRATION ── */
+  function checkLocalMigration() {
+    const raw = localStorage.getItem('drinkLogs');
+    if (!raw) return;
+    try {
+      const local = JSON.parse(raw);
+      if (!local.length) return;
+      $('migration-count').textContent = `${local.length} drink${local.length !== 1 ? 's' : ''}`;
+      $('migration-banner').classList.remove('hidden');
+    } catch(e) {}
+  }
+
+  $('do-migrate').onclick = async () => {
+    const raw = localStorage.getItem('drinkLogs');
+    if (!raw) return;
+    let local;
+    try { local = JSON.parse(raw); } catch(e) { return; }
+    if (!local.length) return;
+
+    $('do-migrate').disabled = true;
+    setSyncing(true);
+    try {
+      // Firestore batch max = 500 writes; chunk if needed
+      const chunkSize = 400;
+      for (let i = 0; i < local.length; i += chunkSize) {
+        const chunk = local.slice(i, i + chunkSize);
+        const batch = writeBatch(db);
+        chunk.forEach(l => {
+          const ref = doc(userColl());
+          batch.set(ref, {
+            drinkType: l.drinkType || '',
+            store:     l.store     || '',
+            paid:      l.paid      || null,
+            price:     l.price     || 0,
+            date:      l.date      || new Date().toISOString()
+          });
+        });
+        await batch.commit();
       }
+      localStorage.removeItem('drinkLogs');
+      await loadLogs();
+      $('migration-banner').classList.add('hidden');
+      showToast(`${local.length} drinks imported to cloud ✓`);
+    } catch(e) {
+      showToast('Import failed — please try again.');
+      console.error(e);
+    }
+    $('do-migrate').disabled = false;
+    setSyncing(false);
+  };
+
+  $('dismiss-migrate').onclick = () => $('migration-banner').classList.add('hidden');
+
+  /* ── TABS ── */
+  document.querySelectorAll('.tab-btn').forEach(btn => {
+    btn.onclick = () => {
+      document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      ['logger','stats','history'].forEach(t =>
+        $('tab-'+t).classList.toggle('hidden', btn.dataset.tab !== t));
+      if (btn.dataset.tab === 'stats')   { updateStats(); renderChart(); }
+      if (btn.dataset.tab === 'history') renderHistory();
     };
-    $('history').appendChild(row);
-  });
-  updateStats();
-}
-
-function updateStats(){
-  const logs=getLogs();
-  $('total').textContent=logs.length;
-  $('coffeeCount').textContent=logs.filter(l=>l.drinkType==='coffee').length;
-  $('bobaCount').textContent=logs.filter(l=>l.drinkType==='boba').length;
-  $('matchaCount').textContent=logs.filter(l=>l.drinkType==='matcha').length;
-  const spend=logs.reduce((s,l)=>s+(l.price||0),0);
-  $('totalSpend').textContent=`$${spend.toFixed(2)}`;
-  const now=new Date();
-  const startOfWeek=new Date(now); startOfWeek.setDate(now.getDate()-now.getDay()); startOfWeek.setHours(0,0,0,0);
-  const startOfMonth=new Date(now.getFullYear(),now.getMonth(),1);
-  $('weekCount').textContent=logs.filter(l=>new Date(l.date)>=startOfWeek).length;
-  $('monthCount').textContent=logs.filter(l=>new Date(l.date)>=startOfMonth).length;
-}
-
-function renderChart(){
-  const logs=getLogs();
-  const canvas=$('pie');
-  const ctx=canvas.getContext('2d');
-
-  const width=canvas.width=300;
-  const height=canvas.height=260;
-  ctx.clearRect(0,0,width,height);
-
-  const c=logs.filter(l=>l.drinkType==='coffee').length;
-  const b=logs.filter(l=>l.drinkType==='boba').length;
-  const m=logs.filter(l=>l.drinkType==='matcha').length;
-
-  const data=[
-    [c,'#8b5e3c','Coffee'],
-    [b,'#cbb69a','Boba'],
-    [m,'#9db18c','Matcha']
-  ].filter(d=>d[0]>0);
-
-  const total=data.reduce((s,d)=>s+d[0],0);
-  if(!total) return;
-
-  const cx=width/2;
-  const cy=height/2;
-  const r=110;
-
-  // ORIGINAL AXIS: start at top
-  let startAngle=-Math.PI/2;
-
-  const slices=[];
-
-  data.forEach(d=>{
-    const sliceAngle=(d[0]/total)*2*Math.PI;
-    const endAngle=startAngle+sliceAngle;
-
-    ctx.beginPath();
-    ctx.moveTo(cx,cy);
-    ctx.arc(cx,cy,r,startAngle,endAngle);
-    ctx.closePath();
-    ctx.fillStyle=d[1];
-    ctx.fill();
-
-    slices.push({start:startAngle,end:endAngle,data:d});
-    startAngle=endAngle;
   });
 
-  const tooltip=$('tooltip');
+  /* ── DRINK CHIPS ── */
+  document.querySelectorAll('.drink-chip').forEach(chip => {
+    chip.onclick = () => {
+      document.querySelectorAll('.drink-chip').forEach(c => c.className = 'drink-chip');
+      selectedType = chip.dataset.type;
+      chip.classList.add('selected-' + selectedType);
+      $('extra-fields').classList.remove('hidden');
+      const hasPaid = selectedType === 'coffee' || selectedType === 'matcha';
+      $('paid-field').classList.toggle('hidden', !hasPaid);
+    };
+  });
 
-  canvas.onmousemove=(e)=>{
-    const rect=canvas.getBoundingClientRect();
-    const x=e.clientX-rect.left-cx;
-    const y=e.clientY-rect.top-cy;
-    const dist=Math.sqrt(x*x+y*y);
-    let angle=Math.atan2(y,x);
+  /* ── SAVE ── */
+  $('save').onclick = async () => {
+    const store = $('store').value.trim();
+    const paid  = $('paid').value;
+    const price = parseFloat($('price').value || 0);
+    const qty   = parseInt($('qty').value || 1);
+    const hasPaid = selectedType === 'coffee' || selectedType === 'matcha';
+    if (!selectedType || !store || (hasPaid && !paid)) {
+      showToast('Please fill in all required fields ✦');
+      return;
+    }
+    const btn = $('save');
+    btn.disabled = true;
+    setSyncing(true);
+    try {
+      for (let i = 0; i < qty; i++) {
+        const entry = {
+          drinkType: selectedType,
+          store, price, date: new Date().toISOString(),
+          paid: hasPaid ? paid : null
+        };
+        const ref = await addDoc(userColl(), entry);
+        allLogs.unshift({ id: ref.id, ...entry });
+      }
+      selectedType = null;
+      document.querySelectorAll('.drink-chip').forEach(c => c.className = 'drink-chip');
+      $('extra-fields').classList.add('hidden');
+      ['store','price','paid'].forEach(id => $(id).value = '');
+      $('qty').value = 1;
+      showToast(qty > 1 ? `${qty} drinks logged ✓` : 'Drink logged ✓');
+    } catch(e) {
+      showToast('Could not save — check your connection.');
+      console.error(e);
+    }
+    btn.disabled = false;
+    setSyncing(false);
+  };
 
-    // normalize to match axis
-    if(angle< -Math.PI/2) angle+=2*Math.PI;
+  /* ── STATS ── */
+  function updateStats() {
+    $('s-total').textContent  = allLogs.length;
+    $('s-coffee').textContent = allLogs.filter(l => l.drinkType === 'coffee').length;
+    $('s-boba').textContent   = allLogs.filter(l => l.drinkType === 'boba').length;
+    $('s-matcha').textContent = allLogs.filter(l => l.drinkType === 'matcha').length;
+    const spend = allLogs.reduce((s,l) => s + (l.price||0), 0);
+    $('s-spend').textContent = '$' + spend.toFixed(2);
+    const now = new Date();
+    const sow = new Date(now); sow.setDate(now.getDate()-now.getDay()); sow.setHours(0,0,0,0);
+    const som = new Date(now.getFullYear(), now.getMonth(), 1);
+    $('s-week').textContent  = allLogs.filter(l => new Date(l.date) >= sow).length;
+    $('s-month').textContent = allLogs.filter(l => new Date(l.date) >= som).length;
+  }
 
-    let hit=null;
-    if(dist<=r){
-      slices.forEach(s=>{
-        if(angle>=s.start && angle<=s.end){ hit=s; }
-      });
+  /* ── PIE CHART ── */
+  function renderChart() {
+    const canvas = $('pie');
+    const ctx = canvas.getContext('2d');
+    const W = canvas.width, H = canvas.height;
+    ctx.clearRect(0, 0, W, H);
+
+    const c = allLogs.filter(l => l.drinkType === 'coffee').length;
+    const b = allLogs.filter(l => l.drinkType === 'boba').length;
+    const m = allLogs.filter(l => l.drinkType === 'matcha').length;
+    const total = c + b + m;
+    $('pie-total').textContent = total;
+
+    const data = [
+      { count: c, color: COLORS.coffee, label: 'Coffee' },
+      { count: b, color: COLORS.boba,   label: 'Boba'   },
+      { count: m, color: COLORS.matcha, label: 'Matcha' },
+    ].filter(d => d.count > 0);
+
+    $('legend').innerHTML = data.map(d =>
+      `<div class="legend-item"><div class="legend-dot" style="background:${d.color}"></div>${d.label}: ${d.count}</div>`
+    ).join('');
+
+    const cx = W/2, cy = H/2, r = 100, innerR = 58;
+
+    if (!total) {
+      ctx.beginPath(); ctx.arc(cx,cy,r,0,Math.PI*2); ctx.fillStyle='#ede5d8'; ctx.fill();
+      ctx.beginPath(); ctx.arc(cx,cy,innerR,0,Math.PI*2); ctx.fillStyle='#fdf8f2'; ctx.fill();
+      return;
     }
 
-    ctx.clearRect(0,0,width,height);
-
-    slices.forEach(s=>{
-      ctx.beginPath();
-      ctx.moveTo(cx,cy);
-      ctx.arc(cx,cy,r,s.start,s.end);
-      ctx.closePath();
-      ctx.fillStyle=s.data[1];
-      ctx.fill();
+    let startAngle = -Math.PI / 2;
+    const slices = [];
+    data.forEach(d => {
+      const angle = (d.count / total) * Math.PI * 2;
+      ctx.beginPath(); ctx.moveTo(cx,cy);
+      ctx.arc(cx, cy, r, startAngle, startAngle + angle);
+      ctx.closePath(); ctx.fillStyle = d.color; ctx.fill();
+      slices.push({ start: startAngle, end: startAngle + angle, ...d });
+      startAngle += angle;
     });
 
-    if(hit){
-      tooltip.style.display='block';
-      tooltip.style.left=(e.clientX+12)+'px';
-      tooltip.style.top=(e.clientY-12)+'px';
-      const pct=((hit.data[0]/total)*100).toFixed(1);
-      tooltip.textContent=`${hit.data[2]}: ${hit.data[0]} (${pct}%)`;
-    } else {
-      tooltip.style.display='none';
+    // Donut hole
+    ctx.beginPath(); ctx.arc(cx,cy,innerR,0,Math.PI*2); ctx.fillStyle='#fdf8f2'; ctx.fill();
+
+    // Slice separators
+    slices.forEach(s => {
+      ctx.beginPath(); ctx.moveTo(cx,cy);
+      ctx.arc(cx,cy,r,s.start,s.end); ctx.closePath();
+      ctx.strokeStyle='#fdf8f2'; ctx.lineWidth=2.5; ctx.stroke();
+    });
+
+    const tooltip = $('tooltip');
+    canvas.onmousemove = e => {
+      const rect = canvas.getBoundingClientRect();
+      const x = e.clientX - rect.left - cx, y = e.clientY - rect.top - cy;
+      const dist = Math.sqrt(x*x + y*y);
+      let angle = Math.atan2(y, x);
+      if (angle < -Math.PI/2) angle += 2*Math.PI;
+      if (dist > innerR && dist <= r) {
+        const hit = slices.find(s => angle >= s.start && angle <= s.end);
+        if (hit) {
+          tooltip.style.display = 'block';
+          tooltip.style.left = (e.clientX+14)+'px';
+          tooltip.style.top  = (e.clientY-14)+'px';
+          tooltip.textContent = `${hit.label}: ${hit.count} (${((hit.count/total)*100).toFixed(1)}%)`;
+          return;
+        }
+      }
+      tooltip.style.display = 'none';
+    };
+    canvas.onmouseleave = () => tooltip.style.display = 'none';
+  }
+
+  /* ── HISTORY ── */
+  function renderHistory() {
+    const list = $('history-list');
+    if (!allLogs.length) {
+      list.innerHTML = '<div class="empty-state">No drinks logged yet…</div>';
+      return;
     }
+    list.innerHTML = '';
+    allLogs.forEach((l, ri) => {
+      const d = new Date(l.date);
+      const dateStr = d.toLocaleDateString('en-US', { month:'short', day:'numeric', year:'numeric' });
+      const el = document.createElement('div');
+      el.className = 'history-entry';
+      el.style.animationDelay = (Math.min(ri,20)*0.03)+'s';
+      const paidBadge = l.paid === 'yes'
+        ? `<span class="entry-paid yes">paid</span>`
+        : l.paid === 'no'
+          ? `<span class="entry-paid no">free</span>`
+          : `<span class="entry-paid na">—</span>`;
+      el.innerHTML = `
+        <div class="entry-icon">${ICONS[l.drinkType]||'☕'}</div>
+        <div><div class="entry-store">${l.store}</div><div class="entry-date">${dateStr}</div></div>
+        ${paidBadge}
+        <div class="entry-price">${l.price ? '$'+Number(l.price).toFixed(2) : '—'}</div>
+        <button class="delete-btn" title="Delete">×</button>
+      `;
+      el.querySelector('.delete-btn').onclick = async () => {
+        if (!confirm('Remove this entry?')) return;
+        setSyncing(true);
+        try {
+          await deleteDoc(doc(db, 'users', currentUser.uid, 'drinks', l.id));
+          allLogs.splice(ri, 1);
+          renderHistory();
+          showToast('Entry deleted');
+        } catch(e) {
+          showToast('Could not delete — try again.');
+        }
+        setSyncing(false);
+      };
+      list.appendChild(el);
+    });
+  }
+
+  /* ── EXPORT ── */
+  $('exportCSV').onclick = () => {
+    if (!allLogs.length) { showToast('No data to export'); return; }
+    let csv = 'Drink,Store,Paid,Price,Date\n';
+    allLogs.forEach(l => { csv += `"${l.drinkType}","${l.store}","${l.paid||''}",${l.price},"${l.date}"\n`; });
+    dl(new Blob([csv],{type:'text/csv'}), 'drink_logs.csv');
   };
-
-  canvas.onmouseleave=()=>tooltip.style.display='none';
-}
-
-renderLogs();
-renderChart();
+  $('exportJSON').onclick = () => {
+    if (!allLogs.length) { showToast('No data to export'); return; }
+    dl(new Blob([JSON.stringify(allLogs,null,2)],{type:'application/json'}), 'drink_logs.json');
+  };
+  function dl(blob, name) {
+    const a = document.createElement('a'); a.href = URL.createObjectURL(blob);
+    a.download = name; a.click();
+  }
 </script>
 </body>
 </html>
